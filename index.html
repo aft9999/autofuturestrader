@@ -3310,6 +3310,7 @@
     if (message.length < 10) { errEl.textContent = 'Please enter a message (min 10 characters).'; errEl.style.display = 'block'; return; }
 
     setLoading('contact-btn-text', 'contact-spinner', true);
+    document.getElementById('contact-btn').disabled = true;
     try {
       await apiCall('/contact', {
         method: 'POST',
