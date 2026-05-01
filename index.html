@@ -1288,7 +1288,7 @@
     <li><a href="#">Privacy Policy</a></li>
     <li><a href="#">Terms of Service</a></li>
     <li><a href="#" onclick="openRiskDisclosure(); return false;">Risk Disclosure</a></li>
-    <li><a href="#" onclick="event.preventDefault(); openContactModal();">Contact</a></li>
+    <li><a href="javascript:void(0)" onclick="openContactModal();">Contact</a></li>
     <li><a href="#" onclick="openAdminPanel(); return false;" style="opacity:0.15; font-size:10px; letter-spacing:0.05em;">Admin</a></li>
   </ul>
 </footer>
@@ -2856,7 +2856,7 @@
       { pct: '75%', color: '#00c8f8', text: 'Good' },
       { pct: '100%', color: '#39e600', text: 'Strong' },
     ];
-    const l = levels&#x1F4CA;;
+    const l = levels[sym];
     fill.style.width = l.pct;
     fill.style.background = l.color;
     label.textContent = l.text;
@@ -2901,7 +2901,7 @@
     const resultEl = document.getElementById('coupon-result');
     if (!code) return;
 
-    const coupon = COUPONS&#x1F4BB;;
+    const coupon = COUPONS[code];
     if (!coupon) {
       appliedCoupon = null;
       resultEl.style.display = 'block';
@@ -2986,7 +2986,7 @@
     if (!terms) return showError('signup-error', 'Please accept the Terms of Service to continue.');
 
     const users = getUsers();
-    if (users&#x2709;) return showError('signup-error', 'An account with this email already exists. Sign in instead.');
+    if (users[email]) return showError('signup-error', 'An account with this email already exists. Sign in instead.');
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
@@ -3027,7 +3027,7 @@
 
   function hasSignedDisclosure(email) {
     const signed = JSON.parse(localStorage.getItem('aft_signed_disclosures') || '{}');
-    return !!signed&#x2709;;
+    return !!signed[email];
   }
 
   async function proceedAfterDisclosure({ fname, lname, email, password, ntid }) {
@@ -3153,7 +3153,7 @@
     else if (/^5[1-5]/.test(v) || /^2[2-7]/.test(v)) icon.textContent = ''; // MC
     else if (/^3[47]/.test(v)) icon.textContent = ''; // Amex
     else if (/^6/.test(v)) icon.textContent = ''; // Discover
-    else icon.textContent = v.length > 0 ? '&#x1F4B3;' : '';
+    else icon.textContent = v.length > 0 ? '[card]' : '';
   }
 
   function formatExpiry(input) {
@@ -3236,7 +3236,7 @@
       joined: new Date().toISOString(),
       nextBilling: getNextBilling(plan),
     };
-    users&#x2709; = user;
+    users[email] = user;
     saveUsers(users);
     setCurrentUser(user);
     pendingSignup = null;
@@ -3445,13 +3445,13 @@
     if (user.isTrial) {
       planChip.innerHTML = `<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.35);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#9201; FREE TRIAL</span>`;
     } else if (user.plan === 'quarterly') {
-      planChip.innerHTML = `<span style="background:rgba(57,230,0,0.12);color:var(--green);border:1px solid rgba(57,230,0,0.3);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#x2B50; QUARTERLY</span>`;
+      planChip.innerHTML = `<span style="background:rgba(57,230,0,0.12);color:var(--green);border:1px solid rgba(57,230,0,0.3);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">QUARTERLY</span>`;
     } else {
       planChip.innerHTML = `<span style="background:rgba(0,200,248,0.1);color:var(--cyan);border:1px solid rgba(0,200,248,0.25);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#10003; MONTHLY</span>`;
     }
 
     // Account tab fields
-    const methodMap = { card:'&#x1F4B3; Card', apple:' Apple Pay', paypal:' PayPal', stripe:'&#x26A1; Stripe', link:' Link' };
+    const methodMap = { card:'Card', apple:' Apple Pay', paypal:' PayPal', stripe:'Stripe', link:' Link' };
     setEl('acct-avatar', initials, 'text');
     setEl('acct-name-display', `${user.fname} ${user.lname}`, 'text');
     setEl('acct-email-display', user.email || '&#8212;', 'text');
@@ -3459,7 +3459,7 @@
     setEl('acct-plan', user.isTrial ? '14-Day Free Trial' : user.plan === 'quarterly' ? 'Quarterly Plan' : 'Monthly Plan', 'text');
     setEl('acct-billing', user.isTrial ? 'Free (trial)' : user.plan === 'quarterly' ? 'Every 3 months' : 'Monthly', 'text');
     setEl('acct-next-billing', user.isTrial ? `Trial ends ${user.trialEnds||'&#8212;'}` : (user.nextBilling||'&#8212;'), 'text');
-    setEl('acct-payment', user.isTrial ? '&#8212; None required' : (methodMap[user.paymentMethod]||'&#x1F4B3; Card'), 'text');
+    setEl('acct-payment', user.isTrial ? '&#8212; None required' : (methodMap[user.paymentMethod]||'Card'), 'text');
     setEl('acct-paid', user.isTrial ? 'FREE' : (user.pricePaid ? `$${user.pricePaid}` : '&#8212;'), 'text');
     if (user.discount) {
       const dr = document.getElementById('acct-discount-row');
@@ -3520,12 +3520,12 @@
     for (let i = 0; i < n; i++) {
       const sym = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)];
       const side = Math.random() > 0.45 ? 'LONG' : 'SHORT';
-      const basePrice = { ES:5280, NQ:18420, RTY:2105, YM:39800, CL:78.4, GC:2340, MNQ:18420, MES:5280 }&#x1F4CA; || 1000;
+      const basePrice = { ES:5280, NQ:18420, RTY:2105, YM:39800, CL:78.4, GC:2340, MNQ:18420, MES:5280 }[sym] || 1000;
       const entry = +(basePrice + (Math.random()-0.5)*basePrice*0.01).toFixed(2);
       const move = (Math.random()*0.8+0.1) * (Math.random() > 0.27 ? 1 : -1);
       const exit = +(entry * (1 + (side==='LONG'?1:-1)*move/100)).toFixed(2);
       const contracts = Math.ceil(Math.random()*3);
-      const mult = { ES:50, NQ:20, RTY:50, YM:5, CL:1000, GC:100, MNQ:2, MES:5 }&#x1F4CA; || 50;
+      const mult = { ES:50, NQ:20, RTY:50, YM:5, CL:1000, GC:100, MNQ:2, MES:5 }[sym] || 50;
       const pnl = +((side==='LONG' ? exit-entry : entry-exit) * contracts * mult).toFixed(0);
       const date = new Date(now - i*3600000*Math.random()*12 - i*86400000*0.3);
       trades.push({ sym, side, entry, exit, contracts, pnl, strat: STRATS[Math.floor(Math.random()*STRATS.length)], date, result: pnl>=0 ? 'win' : 'loss' });
@@ -3541,7 +3541,7 @@
     for (let i = 0; i < n; i++) {
       const sym = SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)];
       const side = Math.random() > 0.45 ? 'LONG' : 'SHORT';
-      const basePrice = { ES:5280, NQ:18420, RTY:2105, YM:39800, CL:78.4, GC:2340, MNQ:18420, MES:5280 }&#x1F4CA; || 1000;
+      const basePrice = { ES:5280, NQ:18420, RTY:2105, YM:39800, CL:78.4, GC:2340, MNQ:18420, MES:5280 }[sym] || 1000;
       const entry = +(basePrice + (Math.random()-0.5)*basePrice*0.003).toFixed(2);
       const sl = +(entry * (1 - (side==='LONG'?1:-1)*0.003)).toFixed(2);
       const tp = +(entry * (1 + (side==='LONG'?1:-1)*0.008)).toFixed(2);
@@ -3673,7 +3673,7 @@
       t.date.toLocaleString(), t.sym, t.side, t.entry, t.exit, t.contracts, t.pnl, t.result, t.strat
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(&#x1F4CB;, { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `AFT_Trades_${new Date().toISOString().slice(0,10)}.csv`;
@@ -4630,8 +4630,8 @@
     const key = email || '__any__';
     // Check all signed emails
     const allSigned = Object.keys(signed);
-    if (allSigned.length > 0 && (signed&#x2709; || signed&#x1F511;)) {
-      const rec = signed&#x2709; || signed[allSigned[0]];
+    if (allSigned.length > 0 && (signed[email] || signed[key])) {
+      const rec = signed[email] || signed[allSigned[0]];
       showAlreadySigned(rec);
     }
   }
@@ -4843,7 +4843,7 @@
 
     // Always save to localStorage as backup
     const localSigned = JSON.parse(localStorage.getItem('aft_signed_disclosures') || '{}');
-    localSigned&#x2709; = { name: fname + ' ' + lname, timestamp: timestampDisplay, airtable: saved };
+    localSigned[email] = { name: fname + ' ' + lname, timestamp: timestampDisplay, airtable: saved };
     localStorage.setItem('aft_signed_disclosures', JSON.stringify(localSigned));
 
     // Reset loading
@@ -4860,8 +4860,8 @@
       `<strong>${fname} ${lname}</strong> (${email})<br/>
        Signed on: <strong>${timestampDisplay}</strong><br/>
        Document: ${DISCLOSURE_VERSION}<br/>
-       &#x2713; Signature saved to secure database
-       ${hasPending ? '<br/><br/><span style="color:var(--green); font-weight:700;">&#x2713; Redirecting you to complete your subscription&#8230;</span>' : ''}`;
+       Signature saved to secure database
+       ${hasPending ? '<br/><br/><span style="color:var(--green); font-weight:700;">Redirecting you to complete your subscription&#8230;</span>' : ''}`;
 
     // If signup was waiting &#8212; auto-proceed after short delay
     if (hasPending) {
@@ -4962,8 +4962,8 @@
       <div class="admin-actions">
         <button class="admin-action-btn admin-btn-refresh" onclick="loadAdminData()">&#8635; Refresh</button>
         <button class="admin-action-btn admin-btn-export" onclick="exportSubscribers()">&#11015; Export CSV</button>
-        <button class="admin-action-btn admin-btn-danger" onclick="confirmClearAll()">&#x1F5D1; Delete All Subscribers</button>
-        <button class="admin-action-btn admin-btn-danger" onclick="confirmClearSignatures()">&#x1F5D1; Delete All Signatures</button>
+        <button class="admin-action-btn admin-btn-danger" onclick="confirmClearAll()">Delete All Subscribers</button>
+        <button class="admin-action-btn admin-btn-danger" onclick="confirmClearSignatures()">Delete All Signatures</button>
         <button class="admin-action-btn" onclick="adminLogout()" style="background:rgba(255,74,74,0.15); border-color:#ff4a4a; color:#ff6b6b; margin-left:auto;">&#x1F6AA; Log Out</button>
       </div>
 
@@ -5298,8 +5298,8 @@
             <td>${editBtn}</td>
             <td>
               <div style="display:flex; flex-direction:column; gap:4px;">
-                <button class="admin-del-btn" onclick="confirmDeleteSubscriber('${u.id}','${u.email}')">&#x1F5D1; Delete</button>
-                <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:#a78bfa;" onclick="downloadDisclosurePDF('${u.id}','${u.first_name} ${u.last_name}')">&#x1F4C4; Disclosure</button>
+                <button class="admin-del-btn" onclick="confirmDeleteSubscriber('${u.id}','${u.email}')">Delete</button>
+                <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:#a78bfa;" onclick="downloadDisclosurePDF('${u.id}','${u.first_name} ${u.last_name}')">Disclosure</button>
               </div>
             </td>
           </tr>`;
@@ -5343,7 +5343,7 @@
           style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:14px; font-family:'JetBrains Mono',monospace; width:100%;" />
       </div>`;
 
-    okBtn.textContent = '&#x1F4BE; Save';
+    okBtn.textContent = 'Save';
     okBtn.style.background = 'rgba(0,200,248,0.15)';
     okBtn.style.borderColor = 'rgba(0,200,248,0.4)';
     okBtn.style.color = 'var(--cyan)';
@@ -5358,10 +5358,10 @@
           body: JSON.stringify({ ninja_trader_id: newNtId })
         });
         if (!res.ok) throw new Error('Update failed');
-        showAdminToast(`&#x2713; NinjaTrader ID updated to: ${newNtId || '&#8212;'}`);
+        showAdminToast(`NT ID updated to: ${newNtId || '&#8212;'}`);
         loadAdminData();
       } catch (err) {
-        showAdminToast('&#x2715; Failed to update NinjaTrader ID');
+        showAdminToast('Failed to update NT ID');
       }
     };
 
@@ -5384,7 +5384,7 @@
           style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:14px; width:100%;" />
       </div>`;
 
-    okBtn.textContent = '&#x1F4BE; Save';
+    okBtn.textContent = 'Save';
     okBtn.style.background = 'rgba(0,200,248,0.15)';
     okBtn.style.borderColor = 'rgba(0,200,248,0.4)';
     okBtn.style.color = 'var(--cyan)';
@@ -5402,10 +5402,10 @@
           body: JSON.stringify({ trial_ends_at: isoDate })
         });
         if (!res.ok) throw new Error('Update failed');
-        showAdminToast(`&#x2713; Trial date updated to ${new Date(isoDate).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`);
+        showAdminToast(`Trial date updated to ${new Date(isoDate).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`);
         loadAdminData();
       } catch (err) {
-        showAdminToast('&#x2715; Failed to update trial date');
+        showAdminToast('Failed to update trial date');
       }
     };
 
@@ -5450,7 +5450,7 @@
         document.getElementById('nav-signup-btn').style.display = '';
         document.getElementById('nav-user-area').style.display = 'none';
         loadAdminData();
-        showAdminToast('&#x2713; All subscribers deleted.');
+        showAdminToast('All subscribers deleted.');
       }
     );
   }
@@ -5462,7 +5462,7 @@
       () => {
         localStorage.removeItem('aft_signed_disclosures');
         loadAdminData();
-        showAdminToast('&#x2713; All local signatures deleted.');
+        showAdminToast('All local signatures deleted.');
       }
     );
   }
@@ -5473,7 +5473,7 @@
       `This will permanently delete the account for ${email}. If they are currently signed in, they will be signed out.`,
       () => {
         const users = getUsers();
-        delete users&#x2709;;
+        delete users[email];
         saveUsers(users);
         // Sign out if it's the current user
         const current = getCurrentUser();
@@ -5484,7 +5484,7 @@
           document.getElementById('nav-user-area').style.display = 'none';
         }
         loadAdminData();
-        showAdminToast(`&#x2713; Subscriber ${email} deleted.`);
+        showAdminToast(`Subscriber ${email} deleted.`);
       }
     );
   }
@@ -5495,10 +5495,10 @@
       `This will remove the signed disclosure record for ${email}. They will need to re-sign before subscribing.`,
       () => {
         const signed = JSON.parse(localStorage.getItem('aft_signed_disclosures') || '{}');
-        delete signed&#x2709;;
+        delete signed[email];
         localStorage.setItem('aft_signed_disclosures', JSON.stringify(signed));
         loadAdminData();
-        showAdminToast(`&#x2713; Signature for ${email} deleted.`);
+        showAdminToast(`Signature for ${email} deleted.`);
       }
     );
   }
@@ -5522,7 +5522,7 @@
       a.download = `risk_disclosure_${userName.replace(/\s+/g,'_')}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-      showAdminToast('&#x2713; PDF downloaded successfully');
+      showAdminToast('PDF downloaded successfully');
     } catch (err) {
       showAdminToast('&#x2715; ' + err.message);
     }
@@ -5545,14 +5545,14 @@
         `"${s.ip_address}"`
       ]);
       const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-      const blob = new Blob(&#x1F4CB;, { type: 'text/csv' });
+      const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `risk_disclosure_signatures_${new Date().toISOString().slice(0,10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      showAdminToast(`&#x2713; Exported ${sigs.length} signatures`);
+      showAdminToast(`Exported ${sigs.length} signatures`);
     } catch (err) {
       showAdminToast('&#x2715; Export failed');
     }
@@ -5564,7 +5564,7 @@
     if (overlay) {
       overlay.style.display = 'flex';
       document.body.style.overflow = 'hidden';
-      showAdminToast('&#x1F4A1; Use Ctrl+P &#8594; Save as PDF to download the document');
+      showAdminToast('[?] Use Ctrl+P &#8594; Save as PDF to download the document');
     }
   }
 
@@ -5580,7 +5580,7 @@
       u.isTrial ? 'Yes' : 'No'
     ]);
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
-    const blob = new Blob(&#x1F4CB;, { type: 'text/csv' });
+    const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = `AFT_Subscribers_${new Date().toISOString().slice(0,10)}.csv`;
