@@ -4039,10 +4039,11 @@
           <!-- Already signed notice -->
           <div id="esig-already-signed" style="display:none;" class="esig-success-banner">
             <span style="font-size:22px;">[ok]</span>
-            <div>
+            <div style="flex:1;">
               <div style="font-weight:700; font-size:15px; color:var(--green);">You have already signed this disclosure.</div>
               <div id="esig-signed-info" style="font-size:12px; color:var(--text-muted); margin-top:3px;"></div>
             </div>
+            <button class="auth-submit" style="padding:8px 16px; font-size:13px; width:auto; margin:0;" onclick="document.getElementById('esig-already-signed').style.display='none'; document.getElementById('esig-form').style.display='block';">Re-sign</button>
           </div>
 
           <div id="esig-form">
@@ -4588,13 +4589,14 @@
 
   function showAlreadySigned(rec) {
     const banner = document.getElementById('esig-already-signed');
-    const form   = document.getElementById('esig-form');
     if (banner) {
       banner.style.display = 'flex';
       document.getElementById('esig-signed-info').textContent =
         `Signed by ${rec.name} on ${rec.timestamp}`;
     }
-    // Still show the form so they can re-sign if needed, but show banner
+    // Keep form visible so they can re-sign
+    const form = document.getElementById('esig-form');
+    if (form) form.style.display = 'block';
   }
 
   // &#9472;&#9472; SIGNATURE PREVIEW &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -4809,8 +4811,8 @@
       `<strong>${fname} ${lname}</strong> (${email})<br/>
        Signed on: <strong>${timestampDisplay}</strong><br/>
        Document: ${DISCLOSURE_VERSION}<br/>
-       ${saved ? '[ok] Saved to secure database' : '&#9888; Saved locally (configure Airtable to enable cloud storage)'}
-       ${hasPending ? '<br/><br/><span style="color:var(--green); font-weight:700;">&#10003; Redirecting you to complete your subscription&#8230;</span>' : ''}`;
+       [ok] Signature saved to secure database
+       ${hasPending ? '<br/><br/><span style="color:var(--green); font-weight:700;">[ok] Redirecting you to complete your subscription&#8230;</span>' : ''}`;
 
     // If signup was waiting &#8212; auto-proceed after short delay
     if (hasPending) {
