@@ -1288,7 +1288,7 @@
     <li><a href="#">Privacy Policy</a></li>
     <li><a href="#">Terms of Service</a></li>
     <li><a href="#" onclick="openRiskDisclosure(); return false;">Risk Disclosure</a></li>
-    <li><a href="#" onclick="openContactModal(); return false;">Contact</a></li>
+    <li><a href="#" onclick="event.preventDefault(); openContactModal();">Contact</a></li>
     <li><a href="#" onclick="openAdminPanel(); return false;" style="opacity:0.15; font-size:10px; letter-spacing:0.05em;">Admin</a></li>
   </ul>
 </footer>
@@ -3283,6 +3283,8 @@
   function openContactModal() {
     const overlay = document.getElementById('contact-overlay');
     overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
     document.body.style.overflow = 'hidden';
     document.getElementById('contact-form').style.display = 'block';
     document.getElementById('contact-success').style.display = 'none';
