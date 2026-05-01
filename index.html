@@ -2009,7 +2009,7 @@
             <span class="acct-field-val">v1.0 &#8212; 2026-01-01</span>
           </div>
           <div style="margin-top:20px;">
-            <button class="acct-btn-outline" onclick="closeDashboard(); openRiskDisclosure();">View / Re-sign Disclosure</button>
+            <button class="acct-btn-outline" onclick="openRiskDisclosure();">View / Re-sign Disclosure</button>
           </div>
         </div>
 
@@ -4525,6 +4525,11 @@
   function closeRiskDisclosure() {
     document.getElementById('risk-disclosure-overlay').style.display = 'none';
     document.body.style.overflow = '';
+    // If user is logged in, reopen the dashboard
+    const user = getCurrentUser();
+    if (user) {
+      showDashboard(user);
+    }
   }
 
   document.addEventListener('keydown', function(e) {
