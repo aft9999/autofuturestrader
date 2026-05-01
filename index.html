@@ -1288,7 +1288,7 @@
     <li><a href="#">Privacy Policy</a></li>
     <li><a href="#">Terms of Service</a></li>
     <li><a href="#" onclick="openRiskDisclosure(); return false;">Risk Disclosure</a></li>
-    <li><a href="mailto:help@autofuturestrader.com">Contact</a></li>
+    <li><a href="#" onclick="openContactModal(); return false;">Contact</a></li>
     <li><a href="#" onclick="openAdminPanel(); return false;" style="opacity:0.15; font-size:10px; letter-spacing:0.05em;">Admin</a></li>
   </ul>
 </footer>
@@ -3276,6 +3276,53 @@
     } catch (err) {
       setLoading('signin-btn-text', 'signin-spinner', false);
       showError('signin-error', err.message || 'Incorrect email or password.');
+    }
+  }
+
+  // ── CONTACT MODAL ─────────────────────────────────────────────────────────
+  function openContactModal() {
+    const overlay = document.getElementById('contact-overlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    document.getElementById('contact-form').style.display = 'block';
+    document.getElementById('contact-success').style.display = 'none';
+    document.getElementById('contact-error').style.display = 'none';
+  }
+
+  function closeContactModal() {
+    document.getElementById('contact-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  async function submitContactForm() {
+    const name    = document.getElementById('contact-name').value.trim();
+    const email   = document.getElementById('contact-email').value.trim();
+    const subject = document.getElementById('contact-subject').value.trim();
+    const message = document.getElementById('contact-message').value.trim();
+    const errEl   = document.getElementById('contact-error');
+    errEl.style.display = 'none';
+
+    if (!name) { errEl.textContent = 'Please enter your name.'; errEl.style.display = 'block'; return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email.'; errEl.style.display = 'block'; return; }
+    if (!subject) { errEl.textContent = 'Please enter a subject.'; errEl.style.display = 'block'; return; }
+    if (message.length < 10) { errEl.textContent = 'Please enter a message (min 10 characters).'; errEl.style.display = 'block'; return; }
+
+    setLoading('contact-btn-text', 'contact-spinner', true);
+    try {
+      await apiCall('/contact', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, subject, message })
+      });
+      setLoading('contact-btn-text', 'contact-spinner', false);
+      document.getElementById('contact-form').style.display = 'none';
+      document.getElementById('contact-success').style.display = 'block';
+      ['contact-name','contact-email','contact-subject','contact-message'].forEach(id => {
+        document.getElementById(id).value = '';
+      });
+    } catch (err) {
+      setLoading('contact-btn-text', 'contact-spinner', false);
+      errEl.textContent = err.message || 'Failed to send. Please try again.';
+      errEl.style.display = 'block';
     }
   }
 
@@ -5554,5 +5601,48 @@
     toast._timeout = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
   }
 </script>
+  <!-- CONTACT MODAL -->
+  <div id="contact-overlay" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(2,8,16,0.92); backdrop-filter:blur(10px); align-items:center; justify-content:center;">
+    <div style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:18px; padding:40px; width:100%; max-width:480px; margin:20px; position:relative;">
+      <button onclick="closeContactModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; line-height:1;">&#x2715;</button>
+      <h2 class="modal-title" style="margin-bottom:6px;">Contact Us</h2>
+      <p class="modal-sub" style="margin-bottom:24px;">We typically respond within 24 hours</p>
+
+      <div id="contact-error" class="auth-error" style="display:none;"></div>
+      <div id="contact-success" style="display:none; text-align:center; padding:20px 0;">
+        <div style="font-size:48px; margin-bottom:12px;">&#x2713;</div>
+        <p style="color:var(--green); font-weight:700; font-size:18px; margin-bottom:8px;">Message sent!</p>
+        <p style="color:var(--text-muted); font-size:14px;">We'll get back to you at your email within 24 hours.</p>
+        <button class="auth-submit" style="margin-top:20px;" onclick="closeContactModal()">Close</button>
+      </div>
+
+      <div id="contact-form">
+        <div class="field-group">
+          <label class="field-label">Your Name</label>
+          <input type="text" id="contact-name" class="auth-input" placeholder="Full name" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Email Address</label>
+          <input type="email" id="contact-email" class="auth-input" placeholder="your@email.com" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Subject</label>
+          <input type="text" id="contact-subject" class="auth-input" placeholder="How can we help?" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">Message</label>
+          <textarea id="contact-message" class="auth-input" rows="5" placeholder="Tell us more..." style="resize:vertical; min-height:120px; font-family:inherit;"></textarea>
+        </div>
+        <button class="auth-submit auth-submit-cyan" onclick="submitContactForm()" id="contact-btn">
+          <span id="contact-btn-text">Send Message</span>
+          <span id="contact-spinner" style="display:none;">&#x23F3;</span>
+        </button>
+        <p style="text-align:center; font-size:12px; color:var(--text-dim); margin-top:12px;">
+          Or email us directly at <a href="mailto:help@autofuturestrader.com" style="color:var(--cyan);">help@autofuturestrader.com</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
