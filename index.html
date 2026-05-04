@@ -1031,6 +1031,7 @@
     <li><a href="#how" onclick="scrollToSection('how'); return false;">How It Works</a></li>
     <li><a href="#pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
     <li><a href="#faq" onclick="scrollToSection('faq'); return false;">FAQ</a></li>
+    <li><a href="javascript:void(0)" onclick="openPlatformModal();" style="color:#e8401c; font-weight:600;">Platform</a></li>
   </ul>
   <div class="nav-ctas">
     <a href="#" class="btn-ghost" id="nav-signin-btn" onclick="openModal('signin'); return false;">&#10230; Sign In</a>
@@ -1081,8 +1082,14 @@
   </div><!-- /hero-left -->
 
   <div class="hero-visual">
-    <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+    <div style="position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:0;">
       <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/AutoFuturesTrader_Logo.png" alt="AutoFuturesTrader" style="width:100%; max-width:580px; border-radius:16px; display:block;" />
+      <div style="display:flex; align-items:center; gap:16px; width:100%; max-width:580px; padding:16px 4px; box-sizing:border-box; margin-top:8px;">
+        <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/NinjaTrader_Wordmark_color_RGB.png" alt="NinjaTrader" style="height:26px; width:auto; display:block;" />
+        <div style="width:1px; height:28px; background:rgba(255,255,255,0.2); flex-shrink:0;"></div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.75); line-height:1.4;">Our <strong style="color:#fff;">#1 recommended</strong> trading software platform</div>
+      </div>
+      <p style="font-size:10px; color:rgba(255,255,255,0.35); line-height:1.5; max-width:580px; margin-top:8px;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
     </div>
   </div>
 </section>
@@ -3261,6 +3268,20 @@
       setLoading('signin-btn-text', 'signin-spinner', false);
       showError('signin-error', err.message || 'Incorrect email or password.');
     }
+  }
+
+  // ── PLATFORM MODAL ────────────────────────────────────────────────────────
+  function openPlatformModal() {
+    const overlay = document.getElementById('platform-overlay');
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'flex-start';
+    overlay.style.justifyContent = 'center';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closePlatformModal() {
+    document.getElementById('platform-overlay').style.display = 'none';
+    document.body.style.overflow = '';
   }
 
   // ── CONTACT MODAL ─────────────────────────────────────────────────────────
@@ -5587,8 +5608,55 @@
     clearTimeout(toast._timeout);
     toast._timeout = setTimeout(() => { toast.style.opacity = '0'; }, 3000);
   }
+
+  // Close overlays on background click
+  window.addEventListener('DOMContentLoaded', function() {
+    var po = document.getElementById('platform-overlay');
+    if (po) po.addEventListener('click', function(e) { if (e.target === this) closePlatformModal(); });
+    var co = document.getElementById('contact-overlay');
+    if (co) co.addEventListener('click', function(e) { if (e.target === this) closeContactModal(); });
+  });
 </script>
-  <!-- CONTACT MODAL -->
+  <!-- PLATFORM MODAL -->
+  <div id="platform-overlay" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(2,8,16,0.95); backdrop-filter:blur(10px); align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#fff; border-radius:18px; padding:48px; width:100%; max-width:780px; margin:40px 20px; position:relative; color:#222;">
+      <button onclick="closePlatformModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; font-size:24px; cursor:pointer; color:#888; line-height:1;">&#x2715;</button>
+
+      <!-- Header -->
+      <div style="display:flex; align-items:center; gap:24px; margin-bottom:32px; padding-bottom:24px; border-bottom:2px solid #f0f0f0;">
+        <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/NinjaTrader_Wordmark_color_RGB.png" alt="NinjaTrader" style="height:36px; width:auto;" />
+        <div>
+          <h2 style="margin:0; font-size:22px; font-weight:800; color:#111;">Our Recommended Trading Platform</h2>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div style="display:grid; grid-template-columns:260px 1fr; gap:32px; align-items:start;">
+        <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/NinjaTrader_Monitor_Image.png" alt="NinjaTrader Platform" style="width:100%; border-radius:8px;" />
+        <div>
+          <p style="font-size:15px; color:#444; line-height:1.7; margin-bottom:20px;">NinjaTrader&#174; is our #1 recommended trading platform preferred by traders worldwide including our clients.</p>
+
+          <p style="font-size:15px; font-weight:700; margin-bottom:12px;"><a href="http://ninjatrader.com" target="_blank" style="color:#e8401c; text-decoration:underline;">Download NinjaTrader</a> &amp; receive immediate <strong>FREE</strong> access to:</p>
+
+          <ul style="list-style:disc; padding-left:20px; color:#444; font-size:14px; line-height:2; margin-bottom:20px;">
+            <li>Simulated trading with real-time futures data</li>
+            <li>Advanced charting including ability to trade directly from your charts</li>
+            <li>High performance backtesting engine to analyze your trading strategies on historical data</li>
+            <li>Advanced Trade Management featuring automatically submitted stop orders, target orders, and trailing stops</li>
+          </ul>
+
+          <p style="font-size:14px; color:#444; line-height:1.7; margin-bottom:16px;">NinjaTrader's award-winning trading platform is consistently voted an industry leader by the trading community. Featuring 1000s of Apps &amp; Add-Ons for unlimited customization, NinjaTrader is used by over <strong>1.9 million traders</strong> for advanced market analysis, professional charting and fast order execution.</p>
+
+          <p style="font-size:14px; color:#444; line-height:1.7; margin-bottom:28px;">For new traders, start preparing for the live markets with a free <a href="http://ninjatrader.com/Simulate" target="_blank" style="color:#e8401c; text-decoration:underline;">trading simulator</a> featuring real-time market data.</p>
+
+          <a href="http://ninjatrader.com" target="_blank" style="display:inline-block; font-size:18px; font-weight:700; color:#e8401c; text-decoration:underline;">Get Started for FREE!</a>
+
+          <p style="font-size:10px; color:#999; line-height:1.5; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="contact-overlay" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(2,8,16,0.92); backdrop-filter:blur(10px); align-items:center; justify-content:center;">
     <div style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:18px; padding:40px; width:100%; max-width:480px; margin:20px; position:relative;">
       <button onclick="closeContactModal()" style="position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-dim); font-size:20px; cursor:pointer; line-height:1;">&#x2715;</button>
