@@ -1032,6 +1032,7 @@
     <li><a href="#pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
     <li><a href="#faq" onclick="scrollToSection('faq'); return false;">FAQ</a></li>
     <li><a href="javascript:void(0)" onclick="openPlatformModal();" style="color:#e8401c; font-weight:600;">Platform</a></li>
+    <li><a href="javascript:void(0)" onclick="openDataModal();" style="color:#e8401c; font-weight:600;">Data</a></li>
   </ul>
   <div class="nav-ctas">
     <a href="#" class="btn-ghost" id="nav-signin-btn" onclick="openModal('signin'); return false;">&#10230; Sign In</a>
@@ -3271,6 +3272,16 @@
   }
 
   // ── PLATFORM MODAL ────────────────────────────────────────────────────────
+  function openDataModal() {
+    const overlay = document.getElementById('data-overlay');
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDataModal() {
+    document.getElementById('data-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   function openPlatformModal() {
     const overlay = document.getElementById('platform-overlay');
     overlay.style.display = 'flex';
@@ -5613,6 +5624,8 @@
   window.addEventListener('DOMContentLoaded', function() {
     var po = document.getElementById('platform-overlay');
     if (po) po.addEventListener('click', function(e) { if (e.target === this) closePlatformModal(); });
+    var dov = document.getElementById('data-overlay');
+    if (dov) dov.addEventListener('click', function(e) { if (e.target === this) closeDataModal(); });
     var co = document.getElementById('contact-overlay');
     if (co) co.addEventListener('click', function(e) { if (e.target === this) closeContactModal(); });
   });
@@ -5652,6 +5665,34 @@
           <a href="http://ninjatrader.com" target="_blank" style="display:inline-block; font-size:18px; font-weight:700; color:#e8401c; text-decoration:underline;">Get Started for FREE!</a>
 
           <p style="font-size:10px; color:#999; line-height:1.5; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA MODAL -->
+  <div id="data-overlay" style="display:none; position:fixed; inset:0; z-index:3000; background:rgba(2,8,16,0.95); backdrop-filter:blur(10px); align-items:center; justify-content:center; overflow-y:auto;">
+    <div style="background:#fff; border-radius:18px; padding:48px; width:100%; max-width:780px; margin:40px 20px; position:relative; color:#222;">
+      <button onclick="closeDataModal()" style="position:absolute; top:16px; right:20px; background:none; border:none; font-size:24px; cursor:pointer; color:#888; line-height:1;">&#x2715;</button>
+
+      <!-- Header -->
+      <div style="display:flex; align-items:center; gap:24px; margin-bottom:32px; padding-bottom:24px; border-bottom:2px solid #f0f0f0;">
+        <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/Kinetick_Logo.png" alt="Kinetick" style="height:52px; width:auto;" />
+      </div>
+
+      <!-- Body -->
+      <div style="display:grid; grid-template-columns:160px 1fr; gap:32px; align-items:start;">
+        <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/Kinetick_Badge.png" alt="Free for End of Day Users" style="width:100%; border-radius:8px;" />
+        <div>
+          <h2 style="margin:0 0 16px; font-size:22px; font-weight:800; color:#111;">Our Recommended Market Data Feed</h2>
+
+          <p style="font-size:15px; color:#444; line-height:1.7; margin-bottom:16px;">Kinetick&reg; delivers reliable, fast and cost-effective <a href="http://kinetick.com/NinjaTrader" target="_blank" style="color:#e8401c; text-decoration:underline;">market data</a> to help level the playing field for active traders. Take advantage of unfiltered, real time quotes for stocks, futures and forex that exceed the expectations of the world's most demanding traders, like us!</p>
+
+          <p style="font-size:15px; color:#444; line-height:1.7; margin-bottom:24px;">Get started with FREE end-of-day <a href="http://kinetick.com/" target="_blank" style="color:#e8401c; text-decoration:underline;">historical market data</a> directly through the NinjaTrader platform and learn how you can significantly reduce CME Group Globex exchange fees on real-time market data with Kinetick.</p>
+
+          <a href="http://kinetick.com/NinjaTrader" target="_blank" style="display:inline-block; font-size:16px; font-weight:700; color:#e8401c; text-decoration:underline;">Get Started with Free EOD Data</a>
+
+          <p style="font-size:10px; color:#999; line-height:1.5; margin-top:24px; padding-top:16px; border-top:1px solid #eee;">Kinetick is a registered trademark of NinjaTrader, LLC. NT is affiliated with NinjaTrader Clearing, LLC d/b/a NinjaTrader, Kraken Derivatives US, and Tradovate ("NTC") through NinjaTrader Group, LLC ("NTG"), collectively "NinjaTrader". NT owns and supports the proprietary NinjaTrader trading platform as a software development company, while NTC provides brokerage services.</p>
         </div>
       </div>
     </div>
