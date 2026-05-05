@@ -2740,10 +2740,33 @@
   // &#9472;&#9472; MODAL CONTROL &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function openModal(type, plan) {
     const overlay = document.getElementById('auth-overlay');
-    // Check if already logged in
+    // If already logged in and clicking a plan button → go straight to payment
+    if (type === 'signup' && plan && plan !== 'trial') {
+      const user = getCurrentUser();
+      if (user) {
+        selectPlan(plan);
+        pendingSignup = {
+          fname: user.fname, lname: user.lname,
+          email: user.email, password: null,
+          plan: plan,
+          pricePaid: plan === 'quarterly' ? '749' : '299',
+          discount: null,
+          skipRegister: true  // flag to skip registration step
+        };
+        ['signin','signup','forgot','dashboard','payment'].forEach(id => {
+          const el = document.getElementById('modal-' + id);
+          if (el) el.style.display = 'none';
+        });
+        overlay.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        showPaymentModal();
+        return;
+      }
+    }
+    // If already logged in and no plan → show dashboard
     if (type === 'signup' || type === 'signin') {
       const user = getCurrentUser();
-      if (user) { showDashboard(user); return; }
+      if (user && !plan) { showDashboard(user); return; }
     }
     ['signin','signup','forgot','dashboard','payment'].forEach(id => {
       document.getElementById('modal-' + id).style.display = 'none';
@@ -3234,29 +3257,32 @@
     const errEl = document.getElementById('payment-error');
 
     try {
-      // Step 1 — Register user
+      // Step 1 — Register user (skip if already logged in)
       let userData;
-      try {
-        const reg = await apiCall('/auth/register', {
-          method: 'POST',
-          body: JSON.stringify({ first_name: fname, last_name: lname, email, password })
-        });
-        setAccessToken(reg.accessToken);
-        setUserId(reg.user.id);
-        userData = reg.user;
-        setCurrentUser({ fname: reg.user.first_name, lname: reg.user.last_name, email: reg.user.email, id: reg.user.id });
-      } catch (err) {
-        // If already registered, try sign in
-        if (err.message && err.message.includes('already exists')) {
-          const sig = await apiCall('/auth/signin', {
+      if (pendingSignup.skipRegister && getAccessToken()) {
+        userData = { first_name: fname, last_name: lname, email };
+      } else {
+        try {
+          const reg = await apiCall('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ email, password })
+            body: JSON.stringify({ first_name: fname, last_name: lname, email, password })
           });
-          setAccessToken(sig.accessToken);
-          setUserId(sig.user.id);
-          userData = sig.user;
-          setCurrentUser({ fname: sig.user.first_name, lname: sig.user.last_name, email: sig.user.email, id: sig.user.id });
-        } else throw err;
+          setAccessToken(reg.accessToken);
+          setUserId(reg.user.id);
+          userData = reg.user;
+          setCurrentUser({ fname: reg.user.first_name, lname: reg.user.last_name, email: reg.user.email, id: reg.user.id });
+        } catch (err) {
+          if (err.message && err.message.includes('already exists')) {
+            const sig = await apiCall('/auth/signin', {
+              method: 'POST',
+              body: JSON.stringify({ email, password })
+            });
+            setAccessToken(sig.accessToken);
+            setUserId(sig.user.id);
+            userData = sig.user;
+            setCurrentUser({ fname: sig.user.first_name, lname: sig.user.last_name, email: sig.user.email, id: sig.user.id });
+          } else throw err;
+        }
       }
 
       // Step 2 — Handle trial separately
@@ -3327,8 +3353,29 @@
     overlay.id = 'pay-processing-overlay';
     overlay.className = 'pay-processing';
 
-&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  // &#9472;&#9472; SIGN IN &#9472;&#9472;
+    const methodLabel = method === 'apple' ? 'Apple Pay' : method === 'paypal' ? 'PayPal' : method === 'stripe' ? 'Stripe' : method === 'link' ? 'Link' : 'Card';
+    overlay.innerHTML = `
+      <div class="pay-processing-spinner"></div>
+      <div style="color:var(--text-primary); font-weight:700; font-size:15px;">Processing ${methodLabel}&hellip;</div>
+      <div style="color:var(--text-dim); font-size:12px;">Please wait, do not close this window</div>`;
+    modal.style.position = 'relative';
+    modal.appendChild(overlay);
+
+    if (method === 'card') {
+      completeSignup(method);
+    } else {
+      setTimeout(() => {
+        overlay.innerHTML = `
+          <div class="pay-success-check">&#10003;</div>
+          <div style="color:var(--green); font-weight:800; font-size:16px;">Payment Successful!</div>
+          <div style="color:var(--text-muted); font-size:13px;">Setting up your account&hellip;</div>`;
+        setTimeout(() => completeSignup(method), 1200);
+      }, 2000);
+    }
+  }
+
+  // ── SIGN IN ───────────────────────────────────────────────────────────────
+  async function handleSignIn() {
     clearErrors();
     const email = document.getElementById('signin-email').value.trim().toLowerCase();
     const password = document.getElementById('signin-password').value;
