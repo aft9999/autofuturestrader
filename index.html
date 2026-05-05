@@ -3109,7 +3109,11 @@
           variables: { colorPrimary: '#00c8f8', colorBackground: '#0a1e35', colorText: '#e8f4ff', colorDanger: '#ff4a4a', borderRadius: '8px' }
         }
       });
-      stripeCardElement = stripeElements.create('card', { hidePostalCode: true });
+      stripeCardElement = stripeElements.create('card', {
+        hidePostalCode: true,
+        disableLink: true,
+        wallets: { applePay: 'never', googlePay: 'never' }
+      });
     }
     setTimeout(() => {
       const mountEl = document.getElementById('stripe-card-element');
