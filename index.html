@@ -1177,6 +1177,9 @@
     <h2 class="section-title">Simple, Transparent Plans</h2>
     <p class="section-sub" style="margin: 0 auto;">Start free, scale as you grow. No hidden fees. Cancel anytime.</p>
   </div>
+  <div id="pricing-back-btn" style="display:none; text-align:center; margin-top:16px;">
+    <button onclick="showDashboard(getCurrentUser())" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); padding:10px 24px; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600;">&#8592; Back to Dashboard</button>
+  </div>
 
   <!-- Free Trial Banner -->
   <div style="max-width:860px; margin:20px auto 0;">
@@ -3918,6 +3921,9 @@
     const area = document.getElementById('nav-user-area');
     area.style.display = 'flex';
     document.getElementById('nav-user-name').textContent = `${user.fname} ${user.lname}`;
+    // Show back to dashboard button in pricing section
+    const backBtn = document.getElementById('pricing-back-btn');
+    if (backBtn) backBtn.style.display = 'block';
   }
 
   // &#9472;&#9472; AUTO-LOGIN ON LOAD &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
