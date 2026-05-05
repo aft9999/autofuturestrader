@@ -3875,9 +3875,15 @@
 
     try {
       await apiCall('/subscriptions/cancel', { method: 'POST', body: JSON.stringify({}) });
-      alert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
-      // Refresh dashboard to show updated status
       const user = getCurrentUser();
+      const plan = user?.plan || 'monthly';
+      const periodLabel = plan === 'quarterly' ? 'quarter' : 'month';
+      // Get access until date from dashboard
+      const renewalEl = document.getElementById('acct-next-billing');
+      const accessUntil = renewalEl ? renewalEl.textContent : '';
+      const dateMsg = accessUntil && accessUntil !== '—' ? ` on ${accessUntil}` : '';
+      alert(`Your subscription has been cancelled. You will retain full access until the end of your current ${periodLabel}${dateMsg}.`);
+      // Refresh dashboard to show updated status
       if (user) showDashboard(user);
     } catch (err) {
       alert('Failed to cancel: ' + (err.message || 'Please try again or contact support.'));
