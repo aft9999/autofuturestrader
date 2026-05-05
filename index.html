@@ -1967,7 +1967,7 @@
             <span class="acct-field-val green" id="acct-discount"></span>
           </div>
           <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
-            <button class="acct-btn-outline" onclick="closeDashboard(); scrollToSection('pricing');">Upgrade Plan</button>
+            <button class="acct-btn-outline" id="upgrade-plan-btn" onclick="closeDashboard(); scrollToSection('pricing');">Upgrade Plan</button>
             <button class="acct-btn-danger" onclick="handleCancelSubscription()">Cancel Subscription</button>
           </div>
         </div>
@@ -3576,7 +3576,7 @@
   let dashCurrentTab = 'overview';
   let dashInitialized = false;
 
-  function showDashboard(user) {
+  async function showDashboard(user) {
     // Close auth modals
     ['signin','signup','forgot','payment'].forEach(id => {
       const el = document.getElementById('modal-' + id);
@@ -3589,6 +3589,32 @@
     const dash = document.getElementById('member-dashboard');
     dash.style.display = 'block';
     document.body.style.overflow = 'hidden';
+
+    // Fetch live subscription data from backend
+    try {
+      const token = getAccessToken();
+      if (token) {
+        const subData = await apiCall('/subscriptions/me');
+        if (subData && subData.subscription) {
+          const sub = subData.subscription;
+          user.plan = sub.billing_cycle || user.plan;
+          user.isTrial = sub.status === 'trialing';
+          user.joined = sub.created_at || user.joined;
+          user.nextBilling = sub.current_period_end
+            ? new Date(sub.current_period_end).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+            : '&#8212;';
+          user.pricePaid = sub.billing_cycle === 'quarterly' ? '749' : sub.billing_cycle === 'monthly' ? '299' : null;
+          user.status = sub.status;
+          user.planName = sub.plan_name;
+          user.trialEnds = sub.trial_ends_at
+            ? new Date(sub.trial_ends_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+            : null;
+          setCurrentUser(user);
+        }
+      }
+    } catch(e) {
+      console.warn('Could not fetch subscription:', e.message);
+    }
 
     // Populate user info
     const initials = ((user.fname||'?')[0] + (user.lname||'?')[0]).toUpperCase();
@@ -3603,7 +3629,7 @@
     if (user.isTrial) {
       planChip.innerHTML = `<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.35);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#9201; FREE TRIAL</span>`;
     } else if (user.plan === 'quarterly') {
-      planChip.innerHTML = `<span style="background:rgba(57,230,0,0.12);color:var(--green);border:1px solid rgba(57,230,0,0.3);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">QUARTERLY</span>`;
+      planChip.innerHTML = `<span style="background:rgba(57,230,0,0.12);color:var(--green);border:1px solid rgba(57,230,0,0.3);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#10003; QUARTERLY</span>`;
     } else {
       planChip.innerHTML = `<span style="background:rgba(0,200,248,0.1);color:var(--cyan);border:1px solid rgba(0,200,248,0.25);border-radius:100px;padding:5px 14px;font-size:11px;font-weight:800;letter-spacing:0.08em;">&#10003; MONTHLY</span>`;
     }
@@ -3619,6 +3645,12 @@
     setEl('acct-next-billing', user.isTrial ? `Trial ends ${user.trialEnds||'&#8212;'}` : (user.nextBilling||'&#8212;'), 'text');
     setEl('acct-payment', user.isTrial ? '&#8212; None required' : (methodMap[user.paymentMethod]||'Card'), 'text');
     setEl('acct-paid', user.isTrial ? 'FREE' : (user.pricePaid ? `$${user.pricePaid}` : '&#8212;'), 'text');
+    // Account status
+    const statusMap = { active: '✓ Active', trialing: '✓ Trial Active', past_due: '⚠ Past Due', cancelled: '✗ Cancelled' };
+    setEl('acct-status', statusMap[user.status] || '✓ Active', 'text');
+    // Hide upgrade button if already on highest plan
+    const upgradeBtn = document.getElementById('upgrade-plan-btn');
+    if (upgradeBtn) upgradeBtn.style.display = user.plan === 'quarterly' ? 'none' : '';
     if (user.discount) {
       const dr = document.getElementById('acct-discount-row');
       if (dr) dr.style.display = 'flex';
