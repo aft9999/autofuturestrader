@@ -2828,7 +2828,7 @@
       if (priceSummaryEl) priceSummaryEl.style.display = 'none';
       // Update button to reflect free trial
       const btnText = document.getElementById('signup-btn-text');
-      if (btnText) btnText.textContent = 'Start Free 14-Day Trial &#8594;';
+      if (btnText) btnText.innerHTML = 'Start Free 14-Day Trial &rarr;';
     } else {
       if (priceSummaryEl) priceSummaryEl.style.display = 'block';
       updatePriceSummary();
@@ -2946,7 +2946,7 @@
 
       document.getElementById('summary-discount-label').textContent =
         appliedCoupon.type === 'percent' ? `${appliedCoupon.value}% discount` : 'Referral discount';
-      document.getElementById('summary-discount-val').textContent = `&#8722;$${discountAmt}`;
+      document.getElementById('summary-discount-val').innerHTML = `&minus;$${discountAmt}`;
       document.getElementById('summary-total').textContent = `$${finalPrice}`;
 
       discountRow.style.display = 'flex';
@@ -2955,13 +2955,13 @@
       summaryEl.classList.add('has-discount');
 
       // Update submit button text
-      document.getElementById('signup-btn-text').textContent = `Continue to Payment &#8212; $${finalPrice} &#8594;`;
+      document.getElementById('signup-btn-text').innerHTML = `Continue to Payment &mdash; $${finalPrice} &rarr;`;
     } else {
       discountRow.style.display = 'none';
       divider.style.display = 'none';
       totalRow.style.display = 'none';
       summaryEl.classList.remove('has-discount');
-      document.getElementById('signup-btn-text').textContent = 'Continue to Payment &#8594;';
+      document.getElementById('signup-btn-text').innerHTML = 'Continue to Payment &rarr;';
     }
   }
 
@@ -3209,7 +3209,7 @@
 
   function showPayError(msg) {
     const el = document.getElementById('payment-error');
-    el.textContent = '&#9888; ' + msg;
+    el.innerHTML = '&#9888; ' + msg;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -5107,7 +5107,7 @@
 
   function showEsigError(msg) {
     const el = document.getElementById('esig-error');
-    el.textContent = '&#9888; ' + msg;
+    el.innerHTML = '&#9888; ' + msg;
     el.style.display = 'block';
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -5426,7 +5426,7 @@
       loadAdminData();
     } else {
       const errEl = document.getElementById('admin-login-error');
-      errEl.textContent = '&#9888; Incorrect password. Please try again.';
+      errEl.innerHTML = '&#9888; Incorrect password. Please try again.';
       errEl.style.display = 'block';
       document.getElementById('admin-password-input').value = '';
       document.getElementById('admin-password-input').focus();
