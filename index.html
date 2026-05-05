@@ -5585,7 +5585,7 @@
     listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>';
     try {
       const res = await fetch(`${API_BASE}/templates`, {
-        headers: { 'Authorization': `Bearer ${getAccessToken()}`, 'x-admin-password': adminPwd }
+        headers: { 'Authorization': `Bearer ${getAccessToken()}`, 'x-admin-password': ADMIN_PASSWORD }
       });
       const data = await res.json();
       if (!data.templates?.length) {
@@ -5630,7 +5630,7 @@
     try {
       const res = await fetch(`${API_BASE}/templates`, {
         method: 'POST',
-        headers: { 'x-admin-password': adminPwd },
+        headers: { 'x-admin-password': ADMIN_PASSWORD },
         body: formData
       });
       const data = await res.json();
@@ -5650,7 +5650,7 @@
     try {
       const res = await fetch(`${API_BASE}/templates/${id}`, {
         method: 'DELETE',
-        headers: { 'x-admin-password': adminPwd }
+        headers: { 'x-admin-password': ADMIN_PASSWORD }
       });
       if (!res.ok) throw new Error('Delete failed');
       adminLoadTemplates();
