@@ -1011,6 +1011,7 @@
     footer { flex-direction: column; gap: 24px; padding: 40px 24px; text-align: center; }
   }
 </style>
+  <script src="https://js.stripe.com/v3/"></script>
 </head>
 <body>
 
@@ -1548,31 +1549,12 @@
         <input type="text" id="cc-name" class="auth-input" placeholder="Alex Smith" autocomplete="cc-name" />
       </div>
       <div class="field-group">
-        <label class="field-label">Card Number</label>
-        <div style="position:relative;">
-          <input type="text" id="cc-number" class="auth-input" placeholder="0000 0000 0000 0000"
-            maxlength="19" autocomplete="cc-number"
-            oninput="formatCardNumber(this)" style="letter-spacing:0.08em; padding-right:52px;" />
-          <span id="cc-brand-icon" style="position:absolute; right:14px; top:50%; transform:translateY(-50%); font-size:20px; pointer-events:none;"></span>
-        </div>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-        <div class="field-group">
-          <label class="field-label">Expiry Date</label>
-          <input type="text" id="cc-expiry" class="auth-input" placeholder="MM / YY"
-            maxlength="7" autocomplete="cc-exp" oninput="formatExpiry(this)" />
-        </div>
-        <div class="field-group">
-          <label class="field-label">CVV</label>
-          <div style="position:relative;">
-            <input type="text" id="cc-cvv" class="auth-input" placeholder="&#8226;&#8226;&#8226;"
-              maxlength="4" autocomplete="cc-csc" oninput="this.value=this.value.replace(/\D/g,'')" />
-            <span title="3-4 digit security code on back of card" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:14px; cursor:help;">&#9432;</span>
-          </div>
-        </div>
+        <label class="field-label">Card Details</label>
+        <div id="stripe-card-element" style="background:rgba(0,200,248,0.04); border:1px solid rgba(0,200,248,0.15); border-radius:8px; padding:14px 16px; color:#e8f4ff;"></div>
+        <div id="stripe-card-errors" style="color:#ff4a4a; font-size:12px; margin-top:6px;"></div>
       </div>
       <div class="pay-secure-note">
-        <span>&#x1F512;</span> 256-bit SSL encrypted &#183; Your card details are never stored
+        <span>&#x1F512;</span> 256-bit SSL encrypted &middot; Powered by Stripe &middot; Card details never stored
       </div>
       <button class="auth-submit auth-submit-green" id="pay-card-btn" onclick="processPayment('card')">
         <span id="pay-card-text"></span>
@@ -3095,6 +3077,27 @@
     switchPayTab('card');
     renderOrderBars();
     updatePayBtnText();
+    // Mount Stripe Card Element
+    const stripe = getStripe();
+    if (!stripeElements) {
+      stripeElements = stripe.elements({
+        appearance: {
+          theme: 'night',
+          variables: { colorPrimary: '#00c8f8', colorBackground: '#0a1e35', colorText: '#e8f4ff', colorDanger: '#ff4a4a', borderRadius: '8px' }
+        }
+      });
+      stripeCardElement = stripeElements.create('card', { hidePostalCode: true });
+    }
+    setTimeout(() => {
+      const mountEl = document.getElementById('stripe-card-element');
+      if (mountEl && mountEl.childElementCount === 0) {
+        stripeCardElement.mount('#stripe-card-element');
+        stripeCardElement.on('change', (e) => {
+          const el = document.getElementById('stripe-card-errors');
+          if (el) el.textContent = e.error ? e.error.message : '';
+        });
+      }
+    }, 100);
     // Pre-fill link email from signup if available
     const linkEmail = document.getElementById('link-email');
     if (linkEmail && !linkEmail.value && pendingSignup) linkEmail.value = pendingSignup.email || '';
@@ -3161,15 +3164,8 @@
     if (errEl) errEl.style.display = 'none';
 
     if (method === 'card') {
-      const name    = document.getElementById('cc-name').value.trim();
-      const number  = document.getElementById('cc-number').value.replace(/\s/g, '');
-      const expiry  = document.getElementById('cc-expiry').value.trim();
-      const cvv     = document.getElementById('cc-cvv').value.trim();
-      if (!name)                return showPayError('Please enter the cardholder name.');
-      if (number.length < 13)   return showPayError('Please enter a valid card number.');
-      if (expiry.length < 7)    return showPayError('Please enter a valid expiry date (MM / YY).');
-      if (cvv.length < 3)       return showPayError('Please enter your CVV.');
-      if (!/^\d{13,16}$/.test(number)) return showPayError('Card number appears invalid.');
+      const name = document.getElementById('cc-name').value.trim();
+      if (!name) return showPayError('Please enter the cardholder name.');
     }
 
     if (method === 'link') {
@@ -3201,45 +3197,138 @@
     const methodLabel = method === 'apple' ? 'Apple Pay' : method === 'paypal' ? 'PayPal' : method === 'stripe' ? 'Stripe' : method === 'link' ? 'Link' : 'Card';
     overlay.innerHTML = `
       <div class="pay-processing-spinner"></div>
-      <div style="color:var(--text-primary); font-weight:700; font-size:15px;">Processing ${methodLabel}&#8230;</div>
+      <div style="color:var(--text-primary); font-weight:700; font-size:15px;">Processing ${methodLabel}&hellip;</div>
       <div style="color:var(--text-dim); font-size:12px;">Please wait, do not close this window</div>`;
     modal.style.position = 'relative';
     modal.appendChild(overlay);
 
-    setTimeout(() => {
-      overlay.innerHTML = `
-        <div class="pay-success-check">&#10003;</div>
-        <div style="color:var(--green); font-weight:800; font-size:16px;">Payment Successful!</div>
-        <div style="color:var(--text-muted); font-size:13px;">Setting up your account&#8230;</div>`;
-      setTimeout(() => completeSignup(method), 1200);
-    }, 2000);
+    // For card payments, completeSignup handles Stripe confirmation directly
+    // For other methods (future), keep the simulated flow
+    if (method === 'card') {
+      completeSignup(method);
+    } else {
+      setTimeout(() => {
+        overlay.innerHTML = `
+          <div class="pay-success-check">&#10003;</div>
+          <div style="color:var(--green); font-weight:800; font-size:16px;">Payment Successful!</div>
+          <div style="color:var(--text-muted); font-size:13px;">Setting up your account&hellip;</div>`;
+        setTimeout(() => completeSignup(method), 1200);
+      }, 2000);
+    }
   }
 
-  function completeSignup(paymentMethod) {
+  // ── STRIPE INSTANCE ───────────────────────────────────────────────────────
+  const STRIPE_PUBLISHABLE_KEY = 'pk_test_51TTTAoE70ngS5gGZfgfk6zSqK3MzAnTqOjuUnj1Rppgc8LE1wG5i80P3pjl1RMQc1Gg6E3B7xOcEWk71dZmAm7pP00hYyYBUll';
+  let stripeInstance = null;
+  let stripeElements = null;
+  let stripeCardElement = null;
+
+  function getStripe() {
+    if (!stripeInstance) stripeInstance = Stripe(STRIPE_PUBLISHABLE_KEY);
+    return stripeInstance;
+  }
+
+  async function completeSignup(paymentMethod) {
     if (!pendingSignup) return;
-    const { fname, lname, email, password, plan, pricePaid, discount } = pendingSignup;
-    const users = getUsers();
-    const user = {
-      fname, lname, email,
-      password: btoa(password),
-      plan,
-      pricePaid,
-      discount,
-      paymentMethod,
-      joined: new Date().toISOString(),
-      nextBilling: getNextBilling(plan),
-    };
-    users[email] = user;
-    saveUsers(users);
-    setCurrentUser(user);
-    pendingSignup = null;
-    updateNavForUser(user);
-    // Small delay then show dashboard
-    setTimeout(() => showDashboard(user), 400);
+    const { fname, lname, email, password, plan } = pendingSignup;
+    const errEl = document.getElementById('payment-error');
+
+    try {
+      // Step 1 — Register user
+      let userData;
+      try {
+        const reg = await apiCall('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ first_name: fname, last_name: lname, email, password })
+        });
+        setAccessToken(reg.accessToken);
+        setUserId(reg.user.id);
+        userData = reg.user;
+        setCurrentUser({ fname: reg.user.first_name, lname: reg.user.last_name, email: reg.user.email, id: reg.user.id });
+      } catch (err) {
+        // If already registered, try sign in
+        if (err.message && err.message.includes('already exists')) {
+          const sig = await apiCall('/auth/signin', {
+            method: 'POST',
+            body: JSON.stringify({ email, password })
+          });
+          setAccessToken(sig.accessToken);
+          setUserId(sig.user.id);
+          userData = sig.user;
+          setCurrentUser({ fname: sig.user.first_name, lname: sig.user.last_name, email: sig.user.email, id: sig.user.id });
+        } else throw err;
+      }
+
+      // Step 2 — Handle trial separately
+      if (plan === 'trial') {
+        await apiCall('/subscriptions/trial', { method: 'POST' });
+        updateNavForUser(getCurrentUser());
+        closeModal();
+        setTimeout(() => showDashboard(getCurrentUser()), 400);
+        return;
+      }
+
+      // Step 3 — Create PaymentIntent via backend
+      const checkout = await apiCall('/subscriptions/checkout', {
+        method: 'POST',
+        body: JSON.stringify({ plan_id: await getPlanId(plan) })
+      });
+
+      // Step 4 — Confirm card payment with Stripe.js
+      const stripe = getStripe();
+      const { error, paymentIntent } = await stripe.confirmCardPayment(checkout.client_secret, {
+        payment_method: {
+          card: stripeCardElement,
+          billing_details: { name: `${fname} ${lname}`, email }
+        }
+      });
+
+      if (error) {
+        showPayError(error.message);
+        const old = document.getElementById('pay-processing-overlay');
+        if (old) old.remove();
+        return;
+      }
+
+      if (paymentIntent.status === 'succeeded') {
+        const processingEl = document.getElementById('pay-processing-overlay');
+        if (processingEl) {
+          processingEl.innerHTML = `
+            <div class="pay-success-check">&#10003;</div>
+            <div style="color:var(--green); font-weight:800; font-size:16px;">Payment Successful!</div>
+            <div style="color:var(--text-muted); font-size:13px;">Setting up your account&hellip;</div>`;
+        }
+        pendingSignup = null;
+        updateNavForUser(getCurrentUser());
+        setTimeout(() => { closeModal(); showDashboard(getCurrentUser()); }, 1200);
+      }
+
+    } catch (err) {
+      const old = document.getElementById('pay-processing-overlay');
+      if (old) old.remove();
+      showPayError(err.message || 'Payment failed. Please try again.');
+    }
   }
 
-  // &#9472;&#9472; SIGN IN &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  async function handleSignIn() {
+  // Get plan UUID from backend plans list
+  async function getPlanId(planSlug) {
+    const data = await apiCall('/plans');
+    const plan = data.plans.find(p => p.billing_cycle === planSlug);
+    if (!plan) throw new Error('Plan not found');
+    return plan.id;
+  }
+
+  function showProcessing(method) {
+    const modal = document.getElementById('modal-payment');
+    const old = document.getElementById('pay-processing-overlay');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'pay-processing-overlay';
+    overlay.className = 'pay-processing';
+
+&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+  // &#9472;&#9472; SIGN IN &#9472;&#9472;
     clearErrors();
     const email = document.getElementById('signin-email').value.trim().toLowerCase();
     const password = document.getElementById('signin-password').value;
