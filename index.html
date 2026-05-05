@@ -3639,15 +3639,15 @@
     setEl('acct-avatar', initials, 'text');
     setEl('acct-name-display', `${user.fname} ${user.lname}`, 'text');
     setEl('acct-email-display', user.email || '&#8212;', 'text');
-    setEl('acct-joined', user.joined ? new Date(user.joined).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '&#8212;', 'text');
-    setEl('acct-plan', user.isTrial ? '14-Day Free Trial' : user.plan === 'quarterly' ? 'Quarterly Plan' : 'Monthly Plan', 'text');
-    setEl('acct-billing', user.isTrial ? 'Free (trial)' : user.plan === 'quarterly' ? 'Every 3 months' : 'Monthly', 'text');
-    setEl('acct-next-billing', user.isTrial ? `Trial ends ${user.trialEnds||'&#8212;'}` : (user.nextBilling||'&#8212;'), 'text');
-    setEl('acct-payment', user.isTrial ? '&#8212; None required' : (methodMap[user.paymentMethod]||'Card'), 'text');
-    setEl('acct-paid', user.isTrial ? 'FREE' : (user.pricePaid ? `$${user.pricePaid}` : '&#8212;'), 'text');
+    setEl('acct-joined', user.joined ? new Date(user.joined).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '&mdash;', 'html');
+    setEl('acct-plan', user.isTrial ? '14-Day Free Trial' : user.plan === 'quarterly' ? 'Quarterly Plan' : 'Monthly Plan', 'html');
+    setEl('acct-billing', user.isTrial ? 'Free (trial)' : user.plan === 'quarterly' ? 'Every 3 months' : 'Monthly', 'html');
+    setEl('acct-next-billing', user.isTrial ? `Trial ends ${user.trialEnds||'&mdash;'}` : (user.nextBilling||'&mdash;'), 'html');
+    setEl('acct-payment', user.isTrial ? '&mdash; None required' : (methodMap[user.paymentMethod]||'Card'), 'html');
+    setEl('acct-paid', user.isTrial ? 'FREE' : (user.pricePaid ? `$${user.pricePaid}` : '&mdash;'), 'html');
     // Account status
     const statusMap = { active: '✓ Active', trialing: '✓ Trial Active', past_due: '⚠ Past Due', cancelled: '✗ Cancelled' };
-    setEl('acct-status', statusMap[user.status] || '✓ Active', 'text');
+    setEl('acct-status', statusMap[user.status] || '✓ Active', 'html');
     // Hide upgrade button if already on highest plan
     const upgradeBtn = document.getElementById('upgrade-plan-btn');
     if (upgradeBtn) upgradeBtn.style.display = user.plan === 'quarterly' ? 'none' : '';
