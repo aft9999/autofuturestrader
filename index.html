@@ -3756,7 +3756,7 @@
               <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
             </div>
           </div>
-          <button onclick="downloadTemplate('${t.id}', '${t.original_name.replace(/'/g,"\\'")}'')" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">⬇ Download</button>
+          <button data-id="${t.id}" data-name="${t.original_name}" onclick="downloadTemplate(this.dataset.id, this.dataset.name)" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">⬇ Download</button>
         `;
         list.appendChild(card);
       });
@@ -5604,7 +5604,7 @@
             ${t.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${t.description}</div>` : ''}
             <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
           </div>
-          <button onclick="adminDeleteTemplate('${t.id}', '${t.original_name.replace(/'/g,"\\'")}'')" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1; Delete</button>
+          <button data-id="${t.id}" data-name="${t.original_name}" onclick="adminDeleteTemplate(this.dataset.id, this.dataset.name)" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1; Delete</button>
         `;
         listEl.appendChild(row);
       });
