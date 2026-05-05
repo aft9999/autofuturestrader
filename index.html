@@ -3874,7 +3874,7 @@
     if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period.')) return;
 
     try {
-      await apiCall('/subscriptions/cancel', { method: 'POST' });
+      await apiCall('/subscriptions/cancel', { method: 'POST', body: JSON.stringify({}) });
       alert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
       // Refresh dashboard to show updated status
       const user = getCurrentUser();
