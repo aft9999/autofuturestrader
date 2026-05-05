@@ -3870,9 +3870,17 @@
     a.click();
   }
 
-  function handleCancelSubscription() {
-    if (confirm('Are you sure you want to cancel your subscription? You will lose access at the end of your billing period.')) {
-      alert('Cancellation request submitted. You will receive a confirmation email. Your access remains active until the end of your billing period.');
+  async function handleCancelSubscription() {
+    if (!confirm('Are you sure you want to cancel your subscription? You will retain access until the end of your current billing period.')) return;
+
+    try {
+      await apiCall('/subscriptions/cancel', { method: 'POST' });
+      alert('Your subscription has been cancelled. You will retain access until the end of your billing period.');
+      // Refresh dashboard to show updated status
+      const user = getCurrentUser();
+      if (user) showDashboard(user);
+    } catch (err) {
+      alert('Failed to cancel: ' + (err.message || 'Please try again or contact support.'));
     }
   }
 
