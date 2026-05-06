@@ -3104,11 +3104,15 @@
     // Check if email already exists via backend
     setLoading('signup-btn-text', 'signup-spinner', true);
     try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
       const checkRes = await fetch(`${API_BASE}/auth/check-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
+        signal: controller.signal
       });
+      clearTimeout(timeout);
       if (checkRes.ok) {
         const checkData = await checkRes.json();
         if (checkData.exists) {
@@ -3116,7 +3120,9 @@
           return showError('signup-error', 'An account with this email already exists. Please sign in instead.');
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Timeout or network error — continue with signup (backend will catch duplicate on register)
+    }
     setLoading('signup-btn-text', 'signup-spinner', false);
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
