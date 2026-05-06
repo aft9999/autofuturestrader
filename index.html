@@ -3847,7 +3847,9 @@
           user.nextBilling = sub.current_period_end
             ? new Date(sub.current_period_end).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
             : '&#8212;';
-          user.pricePaid = sub.billing_cycle === 'quarterly' ? '749' : sub.billing_cycle === 'monthly' ? '299' : null;
+          user.pricePaid = sub.last_amount_cents
+            ? (sub.last_amount_cents / 100).toFixed(2).replace(/\.00$/, '')
+            : sub.billing_cycle === 'quarterly' ? '749' : sub.billing_cycle === 'monthly' ? '299' : null;
           user.status = sub.status;
           user.planName = sub.plan_name;
           user.trialEnds = sub.trial_ends_at
