@@ -1022,6 +1022,10 @@
 
 <!-- NAV -->
 <nav>
+  <!-- PROMO BANNER (shown when admin marks coupon as show_on_landing) -->
+  <div id="promo-banner" style="display:none; background:linear-gradient(135deg,#e8401c,#f59e0b); text-align:center; padding:10px 20px; font-size:13px; font-weight:700; color:#fff; letter-spacing:0.03em; cursor:pointer;" onclick="applyPromoBannerCoupon()">
+    <span id="promo-banner-text"></span> &nbsp;&#x1F449; <u>Click to claim</u>
+  </div>
   <a href="#" class="logo">
     <div class="logo-icon">&#x1F4C8;</div>
     <div class="logo-text">
@@ -2910,42 +2914,52 @@
     document.getElementById(spinnerId).style.display = loading ? 'inline-block' : 'none';
   }
 
-  // &#9472;&#9472; COUPON / REFERRAL CODES &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  const COUPONS = {
-    'TRADE20':   { type: 'percent', value: 20, label: '20% off &#8212; Welcome discount' },
-    'LAUNCH30':  { type: 'percent', value: 30, label: '30% off &#8212; Launch special' },
-    'ALGO10':    { type: 'percent', value: 10, label: '10% off &#8212; Algo trader promo' },
-    'FIRST50':   { type: 'percent', value: 50, label: '50% off &#8212; First month free' },
-    'REF-ALPHA': { type: 'fixed',   value: 50, label: '$50 off &#8212; Referral reward' },
-    'REF-BETA':  { type: 'fixed',   value: 75, label: '$75 off &#8212; Referral reward' },
-    'VIP100':    { type: 'fixed',   value: 100, label: '$100 off &#8212; VIP discount' },
-    'HATARI':    { type: 'fixed',   value: 100, label: '$100 off &#8212; Hatari discount' },
-  };
+  function applyPromoBannerCoupon() {
+    scrollToSection('pricing');
+    // Store pending promo code to auto-fill when payment modal opens
+    if (promoBannerCoupon) window._pendingPromoCoupon = promoBannerCoupon.code;
+  }
 
+  // ── COUPON / REFERRAL CODES ───────────────────────────────────────────────
   const PLAN_PRICES = { monthly: 299, quarterly: 749, trial: 0 };
-
   let appliedCoupon = null;
 
-  function applyCoupon() {
+  async function applyCoupon() {
     const code = document.getElementById('signup-coupon').value.trim().toUpperCase();
     const resultEl = document.getElementById('coupon-result');
     if (!code) return;
 
-    const coupon = COUPONS[code];
-    if (!coupon) {
-      appliedCoupon = null;
-      resultEl.style.display = 'block';
-      resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;"${code}" is not a valid code. Please check and try again.</div>`;
-      updatePriceSummary();
-      return;
-    }
+    try {
+      const res = await fetch(`${API_BASE}/coupons/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code })
+      });
+      const data = await res.json();
 
-    appliedCoupon = { code, ...coupon };
-    resultEl.style.display = 'block';
-    resultEl.innerHTML = `<div class="coupon-success">&#10003; &nbsp;Code applied! ${coupon.label}</div>`;
-    document.querySelector('.coupon-apply-btn').disabled = true;
-    document.getElementById('signup-coupon').disabled = true;
-    updatePriceSummary();
+      if (!res.ok) {
+        appliedCoupon = null;
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;${data.error || 'Invalid coupon code.'}</div>`;
+        updatePriceSummary();
+        return;
+      }
+
+      const coupon = data.coupon;
+      const label = coupon.discount_type === 'percent'
+        ? `${coupon.discount_value}% off`
+        : `$${coupon.discount_value} off`;
+
+      appliedCoupon = { code, type: coupon.discount_type, value: Number(coupon.discount_value), id: coupon.id, label };
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="coupon-success">&#10003; &nbsp;Code applied! ${label}</div>`;
+      document.querySelector('.coupon-apply-btn').disabled = true;
+      document.getElementById('signup-coupon').disabled = true;
+      updatePriceSummary();
+    } catch (err) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;Could not validate coupon. Please try again.</div>`;
+    }
   }
 
   function resetCoupon() {
@@ -3132,6 +3146,16 @@
     switchPayTab('card');
     renderOrderBars();
     updatePayBtnText();
+    // Auto-populate promo coupon if set from banner click
+    if (window._pendingPromoCoupon) {
+      const inp = document.getElementById('signup-coupon');
+      if (inp && !inp.disabled) {
+        inp.value = window._pendingPromoCoupon;
+        window._pendingPromoCoupon = null;
+        // Trigger validation
+        setTimeout(() => applyCoupon(), 100);
+      }
+    }
     // Mount Stripe Card Element
     const stripe = getStripe();
     if (!stripeElements) {
@@ -5294,6 +5318,7 @@
         <button class="admin-tab active" id="atab-subscribers" onclick="switchAdminTab('subscribers')">&#x1F465; Subscribers</button>
         <button class="admin-tab" id="atab-signatures" onclick="switchAdminTab('signatures')">&#x270D; Signatures</button>
         <button class="admin-tab" id="atab-templates" onclick="switchAdminTab('templates')">&#x1F4C2; Templates</button>
+        <button class="admin-tab" id="atab-discounts" onclick="switchAdminTab('discounts')">&#x1F3F7; Discounts</button>
       </div>
 
       <!-- Subscribers Table -->
@@ -5395,6 +5420,71 @@
         </div>
       </div>
     </div><!-- /admin-panel-templates -->
+
+    <!-- ADMIN DISCOUNTS PANEL -->
+    <div id="admin-panel-discounts" style="display:none;">
+
+      <!-- Add/Edit coupon form -->
+      <div style="background:var(--bg-card2); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px;">
+        <h3 id="discount-form-title" style="margin:0 0 16px; font-size:16px; font-weight:700; color:var(--text-primary);">&#x2795; Add New Coupon</h3>
+        <input type="hidden" id="discount-edit-id" value="" />
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">CODE *</label>
+            <input type="text" id="discount-code" placeholder="e.g. SAVE50" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box; text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()" />
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">DESCRIPTION</label>
+            <input type="text" id="discount-description" placeholder="e.g. Summer sale discount" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">DISCOUNT TYPE *</label>
+            <select id="discount-type" style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;">
+              <option value="fixed">Fixed Amount ($)</option>
+              <option value="percent">Percentage (%)</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">DISCOUNT VALUE *</label>
+            <input type="number" id="discount-value" placeholder="e.g. 100 or 20" min="0" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">VALID FROM</label>
+            <input type="date" id="discount-valid-from" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">VALID TO</label>
+            <input type="date" id="discount-valid-to" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+          </div>
+        </div>
+        <div style="display:flex; gap:20px; margin-top:14px; align-items:center; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-muted);">
+            <input type="checkbox" id="discount-active" checked style="width:16px;height:16px;" />
+            Active
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-muted);">
+            <input type="checkbox" id="discount-show-landing" style="width:16px;height:16px;" />
+            Show on landing page
+          </label>
+        </div>
+        <div id="discount-form-error" style="display:none; color:#ff4a4a; font-size:13px; margin-top:10px;"></div>
+        <div style="display:flex; gap:10px; margin-top:16px;">
+          <button onclick="adminSaveCoupon()" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Save Coupon</button>
+          <button id="discount-cancel-edit" onclick="adminCancelEditCoupon()" style="display:none; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:11px 24px; font-size:14px; cursor:pointer;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Coupons list -->
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-primary);">All Coupons</h3>
+          <button onclick="adminLoadCoupons()" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x21BA; Refresh</button>
+        </div>
+        <div id="admin-coupons-list" style="display:flex; flex-direction:column; gap:10px;">
+          <div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>
+        </div>
+      </div>
+    </div><!-- /admin-panel-discounts -->
 
   </div><!-- /admin-container -->
 </div>
@@ -5573,11 +5663,110 @@
   // &#9472;&#9472; TABS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['subscribers','signatures','templates'].forEach(t => {
+    ['subscribers','signatures','templates','discounts'].forEach(t => {
       document.getElementById('atab-' + t).classList.toggle('active', t === tab);
       document.getElementById('admin-panel-' + t).style.display = t === tab ? 'block' : 'none';
     });
     if (tab === 'templates') adminLoadTemplates();
+    if (tab === 'discounts') adminLoadCoupons();
+  }
+
+  // ── ADMIN COUPONS ──────────────────────────────────────────────────────────
+  async function adminLoadCoupons() {
+    const listEl = document.getElementById('admin-coupons-list');
+    listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>';
+    try {
+      const res = await fetch(`${API_BASE}/admin/coupons`, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      const data = await res.json();
+      if (!data.coupons?.length) { listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">No coupons yet.</div>'; return; }
+      listEl.innerHTML = '';
+      data.coupons.forEach(c => {
+        const validFrom = c.valid_from ? new Date(c.valid_from).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+        const validTo = c.valid_to ? new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—';
+        const discountLabel = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;';
+        const safeC = encodeURIComponent(JSON.stringify(c));
+        row.innerHTML = `
+          <div style="flex:1; min-width:0; display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+            <div style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.2); border-radius:8px; padding:6px 14px; font-size:14px; font-weight:800; color:var(--cyan); letter-spacing:0.05em;">${c.code}</div>
+            <div>
+              <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${discountLabel}${c.description ? ' — ' + c.description : ''}</div>
+              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Valid: ${validFrom} → ${validTo} &nbsp;|&nbsp; ${c.is_active ? '<span style="color:#39e600;">Active</span>' : '<span style="color:#ff4a4a;">Inactive</span>'}${c.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#f59e0b;">Shown on landing</span>' : ''}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <button data-coupon="${safeC}" onclick="adminEditCoupon(JSON.parse(decodeURIComponent(this.dataset.coupon)))" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x270F; Edit</button>
+            <button data-id="${c.id}" data-code="${c.code}" onclick="adminDeleteCoupon(this.dataset.id, this.dataset.code)" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1;</button>
+          </div>`;
+        listEl.appendChild(row);
+      });
+    } catch (err) { listEl.innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:32px;">Error: ${err.message}</div>`; }
+  }
+
+  function adminEditCoupon(c) {
+    document.getElementById('discount-edit-id').value = c.id;
+    document.getElementById('discount-code').value = c.code;
+    document.getElementById('discount-description').value = c.description || '';
+    document.getElementById('discount-type').value = c.discount_type;
+    document.getElementById('discount-value').value = c.discount_value;
+    document.getElementById('discount-valid-from').value = c.valid_from ? c.valid_from.slice(0,10) : '';
+    document.getElementById('discount-valid-to').value = c.valid_to ? c.valid_to.slice(0,10) : '';
+    document.getElementById('discount-active').checked = c.is_active;
+    document.getElementById('discount-show-landing').checked = c.show_on_landing;
+    document.getElementById('discount-form-title').textContent = '✏️ Edit Coupon';
+    document.getElementById('discount-cancel-edit').style.display = 'inline-block';
+    document.getElementById('discount-code').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function adminCancelEditCoupon() {
+    document.getElementById('discount-edit-id').value = '';
+    document.getElementById('discount-code').value = '';
+    document.getElementById('discount-description').value = '';
+    document.getElementById('discount-type').value = 'fixed';
+    document.getElementById('discount-value').value = '';
+    document.getElementById('discount-valid-from').value = '';
+    document.getElementById('discount-valid-to').value = '';
+    document.getElementById('discount-active').checked = true;
+    document.getElementById('discount-show-landing').checked = false;
+    document.getElementById('discount-form-title').textContent = '➕ Add New Coupon';
+    document.getElementById('discount-cancel-edit').style.display = 'none';
+  }
+
+  async function adminSaveCoupon() {
+    const errEl = document.getElementById('discount-form-error');
+    errEl.style.display = 'none';
+    const id = document.getElementById('discount-edit-id').value;
+    const code = document.getElementById('discount-code').value.trim().toUpperCase();
+    const description = document.getElementById('discount-description').value.trim();
+    const discount_type = document.getElementById('discount-type').value;
+    const discount_value = parseFloat(document.getElementById('discount-value').value);
+    const valid_from = document.getElementById('discount-valid-from').value || null;
+    const valid_to = document.getElementById('discount-valid-to').value || null;
+    const is_active = document.getElementById('discount-active').checked;
+    const show_on_landing = document.getElementById('discount-show-landing').checked;
+    if (!code) { errEl.textContent = 'Code is required.'; errEl.style.display = 'block'; return; }
+    if (!discount_value || isNaN(discount_value)) { errEl.textContent = 'Discount value is required.'; errEl.style.display = 'block'; return; }
+    const body = { code, description, discount_type, discount_value, valid_from, valid_to, is_active, show_on_landing };
+    const url = id ? `${API_BASE}/admin/coupons/${id}` : `${API_BASE}/admin/coupons`;
+    try {
+      const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify(body) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+      adminCancelEditCoupon();
+      adminLoadCoupons();
+      showAdminToast(id ? 'Coupon updated!' : 'Coupon created!');
+    } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+  }
+
+  async function adminDeleteCoupon(id, code) {
+    if (!confirm(`Delete coupon "${code}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/coupons/${id}`, { method: 'DELETE', headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      if (!res.ok) throw new Error('Delete failed');
+      adminLoadCoupons();
+      showAdminToast('Coupon deleted.');
+    } catch (err) { alert('Delete failed: ' + err.message); }
   }
 
   async function adminLoadTemplates() {
@@ -6041,7 +6230,24 @@
   }
 
   // Close overlays on background click
+  let promoBannerCoupon = null;
+
   window.addEventListener('DOMContentLoaded', function() {
+    // Load promo banner from active landing coupons
+    fetch(`${API_BASE}/coupons/public`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.coupons?.length) {
+          const c = data.coupons[0];
+          promoBannerCoupon = c;
+          const label = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
+          const expiry = c.valid_to ? ` — Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
+          document.getElementById('promo-banner-text').innerHTML = `&#x1F525; Special Offer: Use code <strong>${c.code}</strong> for ${label}${c.description ? ' — ' + c.description : ''}${expiry}`;
+          document.getElementById('promo-banner').style.display = 'block';
+        }
+      })
+      .catch(() => {});
+
     var po = document.getElementById('platform-overlay');
     if (po) po.addEventListener('click', function(e) { if (e.target === this) closePlatformModal(); });
     var dov = document.getElementById('data-overlay');
