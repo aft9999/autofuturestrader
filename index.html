@@ -3897,9 +3897,12 @@
     // Hide upgrade button if already on highest plan
     const upgradeBtn = document.getElementById('upgrade-plan-btn');
     if (upgradeBtn) upgradeBtn.style.display = user.plan === 'quarterly' ? 'none' : '';
-    // Show renew button if cancelled
+    // Show renew button for active and cancelled subscriptions
     const renewBtn = document.getElementById('renew-plan-btn');
-    if (renewBtn) renewBtn.style.display = user.status === 'cancelled' ? '' : 'none';
+    if (renewBtn) {
+      renewBtn.style.display = (user.status === 'cancelled' || user.status === 'active') ? '' : 'none';
+      renewBtn.textContent = user.status === 'cancelled' ? 'Renew Plan' : 'Renew Early';
+    }
     if (user.discount) {
       const dr = document.getElementById('acct-discount-row');
       if (dr) dr.style.display = 'flex';
