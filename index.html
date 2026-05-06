@@ -2964,6 +2964,7 @@
       code: c.code,
       type: c.discount_type,
       value: Number(c.discount_value),
+      id: c.id || null,
       label: c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`
     };
     // Set up pending signup for existing user
