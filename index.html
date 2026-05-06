@@ -2002,6 +2002,7 @@
           </div>
           <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
             <button class="acct-btn-outline" id="upgrade-plan-btn" onclick="closeDashboard(); scrollToSection('pricing');">Upgrade Plan</button>
+            <button class="acct-btn-outline" id="renew-plan-btn" style="display:none;" onclick="handleRenewSubscription()">Renew Plan</button>
             <button class="acct-btn-danger" onclick="handleCancelSubscription()">Cancel Subscription</button>
           </div>
         </div>
@@ -3506,7 +3507,10 @@
       // Step 3 — Create PaymentIntent via backend
       const checkout = await apiCall('/subscriptions/checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan_id: await getPlanId(plan) })
+        body: JSON.stringify({
+          plan_id: await getPlanId(plan),
+          coupon_id: appliedCoupon?.id || null
+        })
       });
 
       // Step 4 — Confirm card payment with Stripe.js
@@ -3890,6 +3894,9 @@
     // Hide upgrade button if already on highest plan
     const upgradeBtn = document.getElementById('upgrade-plan-btn');
     if (upgradeBtn) upgradeBtn.style.display = user.plan === 'quarterly' ? 'none' : '';
+    // Show renew button if cancelled
+    const renewBtn = document.getElementById('renew-plan-btn');
+    if (renewBtn) renewBtn.style.display = user.status === 'cancelled' ? '' : 'none';
     if (user.discount) {
       const dr = document.getElementById('acct-discount-row');
       if (dr) dr.style.display = 'flex';
@@ -4171,6 +4178,29 @@
     a.href = URL.createObjectURL(blob);
     a.download = `AFT_Trades_${new Date().toISOString().slice(0,10)}.csv`;
     a.click();
+  }
+
+  async function handleRenewSubscription() {
+    const user = getCurrentUser();
+    if (!user) return;
+    const plan = user.plan || 'monthly';
+    selectPlan(plan);
+    pendingSignup = {
+      fname: user.fname, lname: user.lname,
+      email: user.email, password: null,
+      plan: plan,
+      pricePaid: plan === 'quarterly' ? '749' : '299',
+      discount: null,
+      skipRegister: true
+    };
+    const overlay = document.getElementById('auth-overlay');
+    ['signin','signup','forgot','dashboard','payment'].forEach(id => {
+      const el = document.getElementById('modal-' + id);
+      if (el) el.style.display = 'none';
+    });
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    showPaymentModal();
   }
 
   async function handleCancelSubscription() {
