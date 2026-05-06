@@ -3084,7 +3084,7 @@
   let pendingSignup = null;
 
   // &#9472;&#9472; SIGN UP &#8212; validates & moves to payment &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  async function handleSignUp() {
+  function handleSignUp() {
     clearErrors();
     const fname = document.getElementById('signup-fname').value.trim();
     const lname = document.getElementById('signup-lname').value.trim();
@@ -3101,29 +3101,7 @@
     if (password !== confirm) return showError('signup-error', 'Passwords do not match.');
     if (!terms) return showError('signup-error', 'Please accept the Terms of Service to continue.');
 
-    // Check if email already exists via backend
-    setLoading('signup-btn-text', 'signup-spinner', true);
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 4000);
-      const checkRes = await fetch(`${API_BASE}/auth/check-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-        signal: controller.signal
-      });
-      clearTimeout(timeout);
-      if (checkRes.ok) {
-        const checkData = await checkRes.json();
-        if (checkData.exists) {
-          setLoading('signup-btn-text', 'signup-spinner', false);
-          return showError('signup-error', 'An account with this email already exists. Please sign in instead.');
-        }
-      }
-    } catch (e) {
-      // Timeout or network error — continue with signup (backend will catch duplicate on register)
-    }
-    setLoading('signup-btn-text', 'signup-spinner', false);
+
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
@@ -3480,14 +3458,10 @@
           setCurrentUser({ fname: reg.user.first_name, lname: reg.user.last_name, email: reg.user.email, id: reg.user.id });
         } catch (err) {
           if (err.message && err.message.includes('already exists')) {
-            const sig = await apiCall('/auth/signin', {
-              method: 'POST',
-              body: JSON.stringify({ email, password })
-            });
-            setAccessToken(sig.accessToken);
-            setUserId(sig.user.id);
-            userData = sig.user;
-            setCurrentUser({ fname: sig.user.first_name, lname: sig.user.last_name, email: sig.user.email, id: sig.user.id });
+            const processingEl = document.getElementById('pay-processing-overlay');
+            if (processingEl) processingEl.remove();
+            showPayError('An account with this email already exists. Please sign in instead.');
+            return;
           } else throw err;
         }
       }
