@@ -5054,10 +5054,10 @@
   function closeRiskDisclosure() {
     document.getElementById('risk-disclosure-overlay').style.display = 'none';
     document.body.style.overflow = '';
-    // If user is logged in, reopen the dashboard
-    const user = getCurrentUser();
-    if (user) {
-      showDashboard(user);
+    // Only redirect to dashboard if no pending signup in progress
+    if (!pendingSignupData) {
+      const user = getCurrentUser();
+      if (user) showDashboard(user);
     }
   }
 
