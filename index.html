@@ -1095,10 +1095,21 @@
       <p style="font-size:10px; color:rgba(255,255,255,0.35); line-height:1.5; max-width:580px; margin-top:8px;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
       <!-- PROMO BADGE -->
       <div id="promo-badge" style="display:none; margin-top:16px; cursor:pointer;" onclick="applyPromoBannerCoupon()">
-        <div style="display:inline-flex; align-items:center; gap:10px; background:linear-gradient(135deg,#e8401c,#f59e0b); border-radius:100px; padding:10px 20px; box-shadow:0 4px 20px rgba(232,64,28,0.4);">
-          <span style="font-size:16px;">&#x1F525;</span>
-          <span id="promo-badge-text" style="font-size:13px; font-weight:700; color:#fff; letter-spacing:0.02em;"></span>
-          <span style="font-size:12px; color:rgba(255,255,255,0.85); font-weight:600; border-left:1px solid rgba(255,255,255,0.3); padding-left:10px;">Click to claim &#x2192;</span>
+        <div style="display:inline-flex; align-items:center; gap:16px; background:rgba(2,8,16,0.6); border:1px solid rgba(0,200,248,0.2); border-radius:16px; padding:12px 20px; backdrop-filter:blur(8px);">
+          <!-- Seal stamp -->
+          <div style="position:relative; flex-shrink:0; width:64px; height:64px;">
+            <svg width="64" height="64" viewBox="0 0 64 64">
+              <polygon points="32,2 38,14 51,8 49,22 63,26 55,37 63,48 49,48 47,62 34,56 32,62 30,56 17,62 15,48 1,48 9,37 1,26 15,22 13,8 26,14" fill="none" stroke="#00c8f8" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="17" fill="rgba(0,200,248,0.1)" stroke="#00c8f8" stroke-width="1"/>
+              <text x="32" y="29" text-anchor="middle" fill="#00c8f8" font-size="7" font-weight="700" font-family="Arial" letter-spacing="1">SPECIAL</text>
+              <text x="32" y="38" text-anchor="middle" fill="#00c8f8" font-size="7" font-weight="700" font-family="Arial" letter-spacing="1">OFFER</text>
+            </svg>
+          </div>
+          <!-- Text -->
+          <div>
+            <div id="promo-badge-text" style="font-size:13px; font-weight:700; color:#e8f4ff; letter-spacing:0.02em; line-height:1.4;"></div>
+            <div style="font-size:11px; color:rgba(0,200,248,0.7); margin-top:4px; font-weight:600;">&#x1F449; Click to claim this offer</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1739,9 +1750,23 @@
       <div class="dash-welcome-bar" id="dash-welcome-bar">
         <div>
           <div class="dash-welcome-name" id="dash-welcome-name">Welcome back, Trader</div>
-          <div class="dash-welcome-sub" id="dash-welcome-sub">Your algo is live and scanning markets</div>
+          <div class="dash-welcome-sub" id="dash-welcome-sub">NOW you can trade Smarter and NOT Harder</div>
         </div>
         <div id="dash-plan-chip"></div>
+      </div>
+
+      <!-- MEMBER PROMO NOTICE -->
+      <div id="dash-promo-notice" style="display:none; margin-bottom:16px; cursor:pointer;" onclick="dashApplyPromo()">
+        <div style="background:linear-gradient(135deg,rgba(232,64,28,0.15),rgba(245,158,11,0.15)); border:1px solid rgba(245,158,11,0.3); border-radius:12px; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:20px;">&#x1F525;</span>
+            <div>
+              <div id="dash-promo-text" style="font-size:14px; font-weight:700; color:var(--text-primary);"></div>
+              <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">Click to use this discount on your next plan upgrade</div>
+            </div>
+          </div>
+          <div style="background:linear-gradient(135deg,#e8401c,#f59e0b); color:#fff; border-radius:100px; padding:8px 18px; font-size:12px; font-weight:700; white-space:nowrap;">Use Discount &#x2192;</div>
+        </div>
       </div>
 
       <!-- KPI Row -->
@@ -2929,9 +2954,17 @@
     document.getElementById(spinnerId).style.display = loading ? 'inline-block' : 'none';
   }
 
+  function dashApplyPromo() {
+    if (!window._memberPromoCoupon) return;
+    window._pendingPromoCoupon = window._memberPromoCoupon.code;
+    window._pendingPromoForExisting = true;
+    closeDashboard();
+    setTimeout(() => scrollToSection('pricing'), 300);
+  }
+
   function applyPromoBannerCoupon() {
     scrollToSection('pricing');
-    // Store pending promo code to auto-fill when payment modal opens
+    // Store pending promo code to auto-fill when any modal opens
     if (promoBannerCoupon) window._pendingPromoCoupon = promoBannerCoupon.code;
   }
 
@@ -3161,14 +3194,32 @@
     switchPayTab('card');
     renderOrderBars();
     updatePayBtnText();
-    // Auto-populate promo coupon if set from banner click
+    // Auto-populate promo coupon if pending
     if (window._pendingPromoCoupon) {
       const inp = document.getElementById('signup-coupon');
       if (inp && !inp.disabled) {
+        // New user flow — populate in signup form
         inp.value = window._pendingPromoCoupon;
         window._pendingPromoCoupon = null;
-        // Trigger validation
-        setTimeout(() => applyCoupon(), 100);
+        window._pendingPromoForExisting = false;
+        setTimeout(() => applyCoupon(), 200);
+      } else if (window._pendingPromoForExisting) {
+        // Existing user flow — apply directly to payment
+        const code = window._pendingPromoCoupon;
+        window._pendingPromoCoupon = null;
+        window._pendingPromoForExisting = false;
+        fetch(`${API_BASE}/coupons/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code })
+        }).then(r => r.json()).then(data => {
+          if (data.coupon) {
+            appliedCoupon = { code, type: data.coupon.discount_type, value: Number(data.coupon.discount_value), id: data.coupon.id };
+            updatePayBtnText();
+          }
+        }).catch(() => {});
+      } else {
+        window._pendingPromoCoupon = null;
       }
     }
     // Mount Stripe Card Element
@@ -3227,7 +3278,15 @@
   function updatePayBtnText() {
     if (!pendingSignup) return;
     const el = document.getElementById('pay-card-text');
-    if (el) el.textContent = `Pay $${pendingSignup.pricePaid} Securely`;
+    if (!el) return;
+    let price = Number(pendingSignup.pricePaid) || (currentPlan === 'quarterly' ? 749 : 299);
+    if (appliedCoupon) {
+      const discount = appliedCoupon.type === 'percent'
+        ? Math.round(price * appliedCoupon.value / 100)
+        : Math.min(appliedCoupon.value, price);
+      price = Math.max(0, price - discount);
+    }
+    el.textContent = `Pay $${price} Securely`;
   }
 
   function switchPayTab(tab) {
@@ -3680,7 +3739,22 @@
     dash.style.display = 'block';
     document.body.style.overflow = 'hidden';
 
-    // Fetch live subscription data from backend
+    // Load member-specific promo coupons (existing_users or both)
+    fetch(`${API_BASE}/coupons/public?audience=existing`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.coupons?.length) {
+          const c = data.coupons[0];
+          window._memberPromoCoupon = c;
+          const label = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
+          const expiry = c.valid_to ? ` · Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
+          document.getElementById('dash-promo-text').textContent = `Special offer: Use code ${c.code} for ${label}${c.description ? ' — ' + c.description : ''}${expiry}`;
+          document.getElementById('dash-promo-notice').style.display = 'block';
+        } else {
+          document.getElementById('dash-promo-notice').style.display = 'none';
+        }
+      })
+      .catch(() => {});
     try {
       const token = getAccessToken();
       if (token) {
@@ -5481,6 +5555,14 @@
             <input type="checkbox" id="discount-show-landing" style="width:16px;height:16px;" />
             Show on landing page
           </label>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; white-space:nowrap;">APPLIES TO:</label>
+            <select id="discount-applies-to" style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:13px;">
+              <option value="new_users">New Users Only</option>
+              <option value="existing_users">Existing Users Only</option>
+              <option value="both">Both New &amp; Existing Users</option>
+            </select>
+          </div>
         </div>
         <div id="discount-form-error" style="display:none; color:#ff4a4a; font-size:13px; margin-top:10px;"></div>
         <div style="display:flex; gap:10px; margin-top:16px;">
@@ -5707,7 +5789,7 @@
             <div style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.2); border-radius:8px; padding:6px 14px; font-size:14px; font-weight:800; color:var(--cyan); letter-spacing:0.05em;">${c.code}</div>
             <div>
               <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${discountLabel}${c.description ? ' — ' + c.description : ''}</div>
-              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Valid: ${validFrom} → ${validTo} &nbsp;|&nbsp; ${c.is_active ? '<span style="color:#39e600;">Active</span>' : '<span style="color:#ff4a4a;">Inactive</span>'}${c.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#f59e0b;">Shown on landing</span>' : ''}</div>
+              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Valid: ${validFrom} → ${validTo} &nbsp;|&nbsp; ${c.is_active ? '<span style="color:#39e600;">Active</span>' : '<span style="color:#ff4a4a;">Inactive</span>'} &nbsp;|&nbsp; ${c.applies_to === 'new_users' ? 'New users' : c.applies_to === 'existing_users' ? '<span style="color:#a78bfa;">Existing users</span>' : '<span style="color:#f59e0b;">All users</span>'}${c.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#f59e0b;">On landing</span>' : ''}</div>
             </div>
           </div>
           <div style="display:flex; gap:8px; flex-shrink:0;">
@@ -5729,6 +5811,7 @@
     document.getElementById('discount-valid-to').value = c.valid_to ? c.valid_to.slice(0,10) : '';
     document.getElementById('discount-active').checked = c.is_active;
     document.getElementById('discount-show-landing').checked = c.show_on_landing;
+    document.getElementById('discount-applies-to').value = c.applies_to || 'new_users';
     document.getElementById('discount-form-title').textContent = '✏️ Edit Coupon';
     document.getElementById('discount-cancel-edit').style.display = 'inline-block';
     document.getElementById('discount-code').scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -5744,6 +5827,7 @@
     document.getElementById('discount-valid-to').value = '';
     document.getElementById('discount-active').checked = true;
     document.getElementById('discount-show-landing').checked = false;
+    document.getElementById('discount-applies-to').value = 'new_users';
     document.getElementById('discount-form-title').textContent = '➕ Add New Coupon';
     document.getElementById('discount-cancel-edit').style.display = 'none';
   }
@@ -5760,9 +5844,10 @@
     const valid_to = document.getElementById('discount-valid-to').value || null;
     const is_active = document.getElementById('discount-active').checked;
     const show_on_landing = document.getElementById('discount-show-landing').checked;
+    const applies_to = document.getElementById('discount-applies-to').value;
     if (!code) { errEl.textContent = 'Code is required.'; errEl.style.display = 'block'; return; }
     if (!discount_value || isNaN(discount_value)) { errEl.textContent = 'Discount value is required.'; errEl.style.display = 'block'; return; }
-    const body = { code, description, discount_type, discount_value, valid_from, valid_to, is_active, show_on_landing };
+    const body = { code, description, discount_type, discount_value, valid_from, valid_to, is_active, show_on_landing, applies_to };
     const url = id ? `${API_BASE}/admin/coupons/${id}` : `${API_BASE}/admin/coupons`;
     try {
       const res = await fetch(url, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify(body) });
