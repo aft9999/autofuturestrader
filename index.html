@@ -3084,7 +3084,7 @@
   let pendingSignup = null;
 
   // &#9472;&#9472; SIGN UP &#8212; validates & moves to payment &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  function handleSignUp() {
+  async function handleSignUp() {
     clearErrors();
     const fname = document.getElementById('signup-fname').value.trim();
     const lname = document.getElementById('signup-lname').value.trim();
@@ -3101,8 +3101,23 @@
     if (password !== confirm) return showError('signup-error', 'Passwords do not match.');
     if (!terms) return showError('signup-error', 'Please accept the Terms of Service to continue.');
 
-    const users = getUsers();
-    if (users[email]) return showError('signup-error', 'An account with this email already exists. Sign in instead.');
+    // Check if email already exists via backend
+    setLoading('signup-btn-text', 'signup-spinner', true);
+    try {
+      const checkRes = await fetch(`${API_BASE}/auth/check-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (checkData.exists) {
+          setLoading('signup-btn-text', 'signup-spinner', false);
+          return showError('signup-error', 'An account with this email already exists. Please sign in instead.');
+        }
+      }
+    } catch (e) {}
+    setLoading('signup-btn-text', 'signup-spinner', false);
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
@@ -3252,7 +3267,21 @@
       stripeElements = stripe.elements({
         appearance: {
           theme: 'night',
-          variables: { colorPrimary: '#00c8f8', colorBackground: '#0a1e35', colorText: '#e8f4ff', colorDanger: '#ff4a4a', borderRadius: '8px' }
+          variables: {
+            colorPrimary: '#00c8f8',
+            colorBackground: '#0a1e35',
+            colorText: '#e8f4ff',
+            colorTextPlaceholder: '#4a7a99',
+            colorDanger: '#ff4a4a',
+            borderRadius: '8px',
+            fontFamily: 'Arial, sans-serif',
+            spacingUnit: '4px'
+          },
+          rules: {
+            '.Input': { color: '#e8f4ff', backgroundColor: '#0a1e35', border: '1px solid rgba(0,200,248,0.15)' },
+            '.Input::placeholder': { color: '#4a7a99' },
+            '.Label': { color: '#8ab4cc' }
+          }
         }
       });
       stripeCardElement = stripeElements.create('card', {
@@ -3289,9 +3318,22 @@
   function renderOrderBars() {
     if (!pendingSignup) return;
     const { plan, pricePaid, discount } = pendingSignup;
+    const basePrice = plan === 'quarterly' ? 749 : plan === 'monthly' ? 299 : 0;
+    // Calculate final price including any applied coupon
+    let finalPrice = basePrice;
+    let savedAmt = 0;
+    if (appliedCoupon) {
+      savedAmt = appliedCoupon.type === 'percent'
+        ? Math.round(basePrice * appliedCoupon.value / 100)
+        : Math.min(appliedCoupon.value, basePrice);
+      finalPrice = Math.max(0, basePrice - savedAmt);
+    } else if (discount) {
+      savedAmt = discount.saved;
+      finalPrice = Math.max(0, basePrice - savedAmt);
+    }
     const planLabel = plan === 'quarterly' ? 'Quarterly Plan' : plan === 'trial' ? '14-Day Free Trial' : 'Monthly Plan';
-    const priceDisplay = plan === 'trial' ? '<span style="color:#f59e0b;font-weight:800;">FREE</span>' : `<span class="pay-final-price">$${pricePaid}</span>`;
-    const savingsHtml = discount ? `<span class="pay-savings"> Saved $${discount.saved}</span>` : '';
+    const priceDisplay = plan === 'trial' ? '<span style="color:#f59e0b;font-weight:800;">FREE</span>' : `<span class="pay-final-price">$${finalPrice}</span>`;
+    const savingsHtml = savedAmt > 0 ? `<span class="pay-savings"> Saved $${savedAmt}</span>` : '';
     const html = `<div><span class="pay-plan-name">${planLabel}</span>&nbsp;&nbsp;${savingsHtml}</div>${priceDisplay}`;
     ['pay-order-bar','pay-order-bar-apple','pay-order-bar-paypal','pay-order-bar-stripe','pay-order-bar-link'].forEach(id => {
       const el = document.getElementById(id);
@@ -3303,12 +3345,13 @@
     if (!pendingSignup) return;
     const el = document.getElementById('pay-card-text');
     if (!el) return;
-    let price = Number(pendingSignup.pricePaid) || (currentPlan === 'quarterly' ? 749 : 299);
+    const basePrice = pendingSignup.plan === 'quarterly' ? 749 : pendingSignup.plan === 'monthly' ? 299 : 0;
+    let price = basePrice;
     if (appliedCoupon) {
       const discount = appliedCoupon.type === 'percent'
-        ? Math.round(price * appliedCoupon.value / 100)
-        : Math.min(appliedCoupon.value, price);
-      price = Math.max(0, price - discount);
+        ? Math.round(basePrice * appliedCoupon.value / 100)
+        : Math.min(appliedCoupon.value, basePrice);
+      price = Math.max(0, basePrice - discount);
     }
     el.textContent = `Pay $${price} Securely`;
   }
