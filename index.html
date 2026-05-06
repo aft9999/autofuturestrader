@@ -2937,8 +2937,10 @@
   // &#9472;&#9472; VALIDATION HELPERS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function showError(id, msg) {
     const el = document.getElementById(id);
-    el.textContent = msg;
+    if (!el) return;
+    el.innerHTML = msg;
     el.style.display = 'block';
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   function clearErrors() {
     ['signin-error','signup-error'].forEach(id => {
@@ -3117,7 +3119,8 @@
         const data = await res.json();
         if (data.exists) {
           setLoading('signup-btn-text', 'signup-spinner', false);
-          return showError('signup-error', 'An account with this email already exists. Please sign in instead.');
+          await new Promise(r => setTimeout(r, 50));
+          return showError('signup-error', '&#9888; An account with this email already exists. Please <a href="javascript:void(0)" onclick="openModal(\'signin\')" style="color:var(--cyan); text-decoration:underline;">sign in</a> instead.');
         }
       }
     } catch (e) {
@@ -3129,13 +3132,10 @@
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
-      // Save all form data so we can resume after signing
       pendingSignupData = { fname, lname, email, password, ntid, plan: currentPlan, coupon: appliedCoupon };
-      // Pre-fill the signature panel with their details
+      setLoading('signup-btn-text', 'signup-spinner', false);
       showError('signup-error', '&#9888; Please read and sign the Risk Disclosure before continuing.');
-      setTimeout(() => {
-        openRiskDisclosureForSignup();
-      }, 400);
+      setTimeout(() => { openRiskDisclosureForSignup(); }, 400);
       return;
     }
 
@@ -3177,6 +3177,10 @@
       ntid = ntid || pendingSignupData.ntid;
       selectPlan(currentPlan);
     }
+    // Ensure signup modal is visible so setLoading can find elements
+    document.getElementById('modal-signup').style.display = 'block';
+    document.getElementById('auth-overlay').classList.add('active');
+    document.body.style.overflow = 'hidden';
 
     // For free trial &#8212; register + activate trial via API
     if (currentPlan === 'trial') {
