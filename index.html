@@ -1022,10 +1022,6 @@
 
 <!-- NAV -->
 <nav>
-  <!-- PROMO BANNER (shown when admin marks coupon as show_on_landing) -->
-  <div id="promo-banner" style="display:none; background:linear-gradient(135deg,#e8401c,#f59e0b); text-align:center; padding:10px 20px; font-size:13px; font-weight:700; color:#fff; letter-spacing:0.03em; cursor:pointer;" onclick="applyPromoBannerCoupon()">
-    <span id="promo-banner-text"></span> &nbsp;&#x1F449; <u>Click to claim</u>
-  </div>
   <a href="#" class="logo">
     <div class="logo-icon">&#x1F4C8;</div>
     <div class="logo-text">
@@ -1097,6 +1093,14 @@
         <div style="font-size:12px; color:rgba(255,255,255,0.75); line-height:1.4;">Our <strong style="color:#fff;">#1 recommended</strong> trading software platform</div>
       </div>
       <p style="font-size:10px; color:rgba(255,255,255,0.35); line-height:1.5; max-width:580px; margin-top:8px;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
+      <!-- PROMO BADGE -->
+      <div id="promo-badge" style="display:none; margin-top:16px; cursor:pointer;" onclick="applyPromoBannerCoupon()">
+        <div style="display:inline-flex; align-items:center; gap:10px; background:linear-gradient(135deg,#e8401c,#f59e0b); border-radius:100px; padding:10px 20px; box-shadow:0 4px 20px rgba(232,64,28,0.4);">
+          <span style="font-size:16px;">&#x1F525;</span>
+          <span id="promo-badge-text" style="font-size:13px; font-weight:700; color:#fff; letter-spacing:0.02em;"></span>
+          <span style="font-size:12px; color:rgba(255,255,255,0.85); font-weight:600; border-left:1px solid rgba(255,255,255,0.3); padding-left:10px;">Click to claim &#x2192;</span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
@@ -2818,6 +2822,17 @@
       if (couponBtn) couponBtn.disabled = false;
       const resultEl = document.getElementById('coupon-result');
       if (resultEl) resultEl.style.display = 'none';
+      // Auto-populate promo coupon if pending from banner click
+      if (window._pendingPromoCoupon) {
+        setTimeout(() => {
+          const inp = document.getElementById('signup-coupon');
+          if (inp && !inp.disabled) {
+            inp.value = window._pendingPromoCoupon;
+            window._pendingPromoCoupon = null;
+            applyCoupon();
+          }
+        }, 200);
+      }
     }
     document.getElementById('modal-' + type).style.display = 'block';
     overlay.classList.add('active');
@@ -6233,7 +6248,7 @@
   let promoBannerCoupon = null;
 
   window.addEventListener('DOMContentLoaded', function() {
-    // Load promo banner from active landing coupons
+    // Load promo badge from active landing coupons
     fetch(`${API_BASE}/coupons/public`)
       .then(r => r.json())
       .then(data => {
@@ -6241,9 +6256,10 @@
           const c = data.coupons[0];
           promoBannerCoupon = c;
           const label = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
-          const expiry = c.valid_to ? ` — Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
-          document.getElementById('promo-banner-text').innerHTML = `&#x1F525; Special Offer: Use code <strong>${c.code}</strong> for ${label}${c.description ? ' — ' + c.description : ''}${expiry}`;
-          document.getElementById('promo-banner').style.display = 'block';
+          const expiry = c.valid_to ? ` · Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
+          const desc = c.description ? ` — ${c.description}` : '';
+          document.getElementById('promo-badge-text').textContent = `Use code ${c.code} for ${label}${desc}${expiry}`;
+          document.getElementById('promo-badge').style.display = 'block';
         }
       })
       .catch(() => {});
