@@ -3264,6 +3264,22 @@
     document.getElementById('modal-payment').style.display = 'block';
     document.getElementById('auth-overlay').classList.add('active');
     document.body.style.overflow = 'hidden';
+    // Clear any previous payment processing overlay
+    const oldOverlay = document.getElementById('pay-processing-overlay');
+    if (oldOverlay) oldOverlay.remove();
+    // Clear previous errors
+    const payErrEl = document.getElementById('payment-error');
+    if (payErrEl) payErrEl.style.display = 'none';
+    // Reset cardholder name
+    const nameEl = document.getElementById('cc-name');
+    if (nameEl) nameEl.value = '';
+    // Unmount and remount Stripe element to reset it
+    if (stripeCardElement) {
+      try { stripeCardElement.unmount(); } catch(e) {}
+      stripeCardElement = null;
+    }
+    const mountEl = document.getElementById('stripe-card-element');
+    if (mountEl) mountEl.innerHTML = '';
     switchPayTab('card');
     renderOrderBars();
     updatePayBtnText();
