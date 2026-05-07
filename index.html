@@ -2786,6 +2786,26 @@
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
+    // Auto-refresh token on 401
+    if (res.status === 401) {
+      try {
+        const refreshRes = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST', credentials: 'include' });
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json();
+          setAccessToken(refreshData.accessToken);
+          // Retry original request with new token
+          headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
+          const retryRes = await fetch(`${API_BASE}${path}`, { ...options, headers, credentials: 'include' });
+          const retryData = await retryRes.json().catch(() => ({}));
+          if (!retryRes.ok) throw new Error(retryData.error || `Request failed (${retryRes.status})`);
+          return retryData;
+        }
+      } catch (e) {}
+      // Refresh failed — sign out
+      setAccessToken(null);
+      setCurrentUser(null);
+      throw new Error('Session expired. Please sign in again.');
+    }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
     return data;
