@@ -1729,6 +1729,8 @@
       <button class="dnav-tab" data-tab="history" onclick="switchDashTab('history')">Trade History</button>
       <button class="dnav-tab" data-tab="account" onclick="switchDashTab('account')">Account</button>
       <button class="dnav-tab" data-tab="templates" onclick="switchDashTab('templates')">Templates</button>
+      <button class="dnav-tab" data-tab="releases" onclick="switchDashTab('releases')">Releases</button>
+      <button class="dnav-tab" data-tab="releases" onclick="switchDashTab('releases')">Releases</button>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
 
@@ -2098,6 +2100,42 @@
 
       </div>
     </div><!-- /templates -->
+
+    <!-- RELEASES TAB -->
+    <div id="dtab-releases" class="dash-tab-panel" style="display:none;">
+      <div style="max-width:900px; margin:0 auto; padding:0 8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="margin:0 0 4px; font-size:22px; font-weight:800; color:var(--text-primary);">Software Releases</h2>
+            <p style="margin:0; font-size:13px; color:var(--text-muted);">Download the latest AutoFuturesTrader software releases.</p>
+          </div>
+        </div>
+        <div id="releases-loading" style="text-align:center; padding:48px; color:var(--text-dim); font-size:14px;">Loading releases&hellip;</div>
+        <div id="releases-empty" style="display:none; text-align:center; padding:48px;">
+          <div style="font-size:40px; margin-bottom:12px;">📦</div>
+          <div style="color:var(--text-muted); font-size:15px;">No releases available yet. Check back soon!</div>
+        </div>
+        <div id="releases-list" style="display:none; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div><!-- /releases -->
+
+    <!-- RELEASES TAB -->
+    <div id="dtab-releases" class="dash-tab-panel" style="display:none;">
+      <div style="max-width:900px; margin:0 auto; padding:0 8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="margin:0 0 4px; font-size:22px; font-weight:800; color:var(--text-primary);">Releases</h2>
+            <p style="margin:0; font-size:13px; color:var(--text-muted);">Download the latest AutoFuturesTrader software releases.</p>
+          </div>
+        </div>
+        <div id="releases-loading" style="text-align:center; padding:48px; color:var(--text-dim); font-size:14px;">Loading releases&hellip;</div>
+        <div id="releases-empty" style="display:none; text-align:center; padding:48px;">
+          <div style="font-size:40px; margin-bottom:12px;">📦</div>
+          <div style="color:var(--text-muted); font-size:15px;">No releases available yet. Check back soon!</div>
+        </div>
+        <div id="releases-list" style="display:flex; flex-direction:column; gap:12px;"></div>
+      </div>
+    </div><!-- /releases -->
 
   </div><!-- /dash-body -->
 </div><!-- /member-dashboard -->
@@ -4043,13 +4081,14 @@
 
   function switchDashTab(tab) {
     dashCurrentTab = tab;
-    ['overview','history','account','templates'].forEach(t => {
+    ['overview','history','account','templates','releases'].forEach(t => {
       document.getElementById('dtab-' + t).style.display = t === tab ? 'block' : 'none';
       const btn = document.querySelector(`.dnav-tab[data-tab="${t}"]`);
       if (btn) btn.classList.toggle('active', t === tab);
     });
     if (tab === 'history') renderHistoryTab();
     if (tab === 'templates') loadTemplates();
+    if (tab === 'releases') loadReleases();
   }
 
   // &#9472;&#9472; SIMULATED DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -5551,6 +5590,7 @@
         <button class="admin-tab active" id="atab-subscribers" onclick="switchAdminTab('subscribers')">&#x1F465; Subscribers</button>
         <button class="admin-tab" id="atab-signatures" onclick="switchAdminTab('signatures')">&#x270D; Signatures</button>
         <button class="admin-tab" id="atab-templates" onclick="switchAdminTab('templates')">&#x1F4C2; Templates</button>
+        <button class="admin-tab" id="atab-releases" onclick="switchAdminTab('releases')">&#x1F4E6; Releases</button>
         <button class="admin-tab" id="atab-discounts" onclick="switchAdminTab('discounts')">&#x1F3F7; Discounts</button>
       </div>
 
@@ -5653,6 +5693,44 @@
         </div>
       </div>
     </div><!-- /admin-panel-templates -->
+
+    <!-- ADMIN RELEASES PANEL -->
+    <div id="admin-panel-releases" style="display:none;">
+      <div style="background:var(--bg-card2); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px;">
+        <h3 id="release-form-title" style="margin:0 0 16px; font-size:16px; font-weight:700; color:var(--text-primary);">⬆ Upload New Release</h3>
+        <input type="hidden" id="release-edit-id" value="" />
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div id="release-file-group">
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">ZIP FILE *</label>
+            <input type="file" id="admin-release-file" accept=".zip" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box; cursor:pointer;" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">VERSION</label>
+              <input type="text" id="release-version" placeholder="e.g. 1.7.4" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">DESCRIPTION</label>
+              <input type="text" id="release-description" placeholder="e.g. Bug fixes and performance improvements" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+            </div>
+          </div>
+          <div id="release-form-error" style="display:none; color:#ff4a4a; font-size:13px;"></div>
+          <div style="display:flex; gap:10px;">
+            <button onclick="adminSaveRelease()" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Save Release</button>
+            <button id="release-cancel-edit" onclick="adminCancelEditRelease()" style="display:none; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:11px 24px; font-size:14px; cursor:pointer;">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-primary);">Uploaded Releases</h3>
+          <button onclick="adminLoadReleases()" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x21BA; Refresh</button>
+        </div>
+        <div id="admin-releases-list" style="display:flex; flex-direction:column; gap:10px;">
+          <div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>
+        </div>
+      </div>
+    </div><!-- /admin-panel-releases -->
 
     <!-- ADMIN DISCOUNTS PANEL -->
     <div id="admin-panel-discounts" style="display:none;">
@@ -5904,12 +5982,13 @@
   // &#9472;&#9472; TABS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['subscribers','signatures','templates','discounts'].forEach(t => {
+    ['subscribers','signatures','templates','discounts','releases'].forEach(t => {
       document.getElementById('atab-' + t).classList.toggle('active', t === tab);
       document.getElementById('admin-panel-' + t).style.display = t === tab ? 'block' : 'none';
     });
     if (tab === 'templates') adminLoadTemplates();
     if (tab === 'discounts') adminLoadCoupons();
+    if (tab === 'releases') adminLoadReleases();
   }
 
   // ── ADMIN COUPONS ──────────────────────────────────────────────────────────
@@ -6010,6 +6089,142 @@
       if (!res.ok) throw new Error('Delete failed');
       adminLoadCoupons();
       showAdminToast('Coupon deleted.');
+    } catch (err) { alert('Delete failed: ' + err.message); }
+  }
+
+  // ── RELEASES ───────────────────────────────────────────────────────────────
+  async function loadReleases() {
+    const loading = document.getElementById('releases-loading');
+    const empty   = document.getElementById('releases-empty');
+    const list    = document.getElementById('releases-list');
+    loading.style.display = 'block';
+    empty.style.display   = 'none';
+    list.style.display    = 'none';
+    list.innerHTML        = '';
+    try {
+      const data = await apiCall('/releases');
+      loading.style.display = 'none';
+      if (!data.releases?.length) { empty.style.display = 'block'; return; }
+      list.style.display = 'flex';
+      data.releases.forEach(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+        const sizekb = r.file_size ? `${(r.file_size/1024).toFixed(1)} KB` : '';
+        const card = document.createElement('div');
+        card.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;';
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; gap:16px; flex:1; min-width:0;">
+            <div style="width:44px; height:44px; border-radius:10px; background:rgba(57,230,0,0.1); border:1px solid rgba(57,230,0,0.2); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0;">📦</div>
+            <div style="min-width:0;">
+              <div style="font-size:14px; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${r.original_name}</div>
+              ${r.version ? `<div style="font-size:11px; color:var(--cyan); margin-top:2px; font-weight:600;">v${r.version}</div>` : ''}
+              ${r.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${r.description}</div>` : ''}
+              <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
+            </div>
+          </div>
+          <button data-id="${r.id}" data-name="${r.original_name}" onclick="downloadRelease(this.dataset.id, this.dataset.name)" style="background:linear-gradient(135deg,var(--green),#1a7e00); color:#fff; border:none; border-radius:8px; padding:10px 20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; flex-shrink:0;">⬇ Download</button>`;
+        list.appendChild(card);
+      });
+    } catch (err) {
+      loading.style.display = 'none';
+      empty.style.display = 'block';
+      empty.innerHTML = `<div style="color:#ff4a4a; font-size:14px;">Failed to load releases: ${err.message}</div>`;
+    }
+  }
+
+  async function downloadRelease(id, filename) {
+    try {
+      const token = getAccessToken();
+      const res = await fetch(`${API_BASE}/releases/${id}/download`, { headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include' });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert('Download failed: ' + err.message); }
+  }
+
+  async function adminLoadReleases() {
+    const listEl = document.getElementById('admin-releases-list');
+    listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>';
+    try {
+      const res = await fetch(`${API_BASE}/releases`, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      const data = await res.json();
+      if (!data.releases?.length) { listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">No releases uploaded yet.</div>'; return; }
+      listEl.innerHTML = '';
+      data.releases.forEach(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        const sizekb = r.file_size ? `${(r.file_size/1024).toFixed(1)} KB` : '';
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;';
+        row.innerHTML = `
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${r.original_name}${r.version ? ' <span style="color:var(--cyan); font-size:11px;">v'+r.version+'</span>' : ''}</div>
+            ${r.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${r.description}</div>` : ''}
+            <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <button data-id="${r.id}" data-desc="${(r.description||'').replace(/"/g,'&quot;')}" data-ver="${r.version||''}" onclick="adminEditRelease(this.dataset.id, this.dataset.desc, this.dataset.ver)" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x270F; Edit</button>
+            <button data-id="${r.id}" data-name="${r.original_name}" onclick="adminDeleteRelease(this.dataset.id, this.dataset.name)" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1;</button>
+          </div>`;
+        listEl.appendChild(row);
+      });
+    } catch (err) { listEl.innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:32px;">Error: ${err.message}</div>`; }
+  }
+
+  function adminEditRelease(id, desc, ver) {
+    document.getElementById('release-edit-id').value = id;
+    document.getElementById('release-description').value = desc;
+    document.getElementById('release-version').value = ver;
+    document.getElementById('release-form-title').textContent = '✏️ Edit Release';
+    document.getElementById('release-cancel-edit').style.display = 'inline-block';
+    document.getElementById('release-file-group').style.display = 'none';
+  }
+
+  function adminCancelEditRelease() {
+    document.getElementById('release-edit-id').value = '';
+    document.getElementById('release-description').value = '';
+    document.getElementById('release-version').value = '';
+    document.getElementById('release-form-title').textContent = '⬆ Upload New Release';
+    document.getElementById('release-cancel-edit').style.display = 'none';
+    document.getElementById('release-file-group').style.display = 'block';
+    document.getElementById('admin-release-file').value = '';
+  }
+
+  async function adminSaveRelease() {
+    const errEl = document.getElementById('release-form-error');
+    errEl.style.display = 'none';
+    const id = document.getElementById('release-edit-id').value;
+    const description = document.getElementById('release-description').value.trim();
+    const version = document.getElementById('release-version').value.trim();
+    if (id) {
+      try {
+        const res = await fetch(`${API_BASE}/releases/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify({ description, version }) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
+        adminCancelEditRelease(); adminLoadReleases(); showAdminToast('Release updated!');
+      } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    } else {
+      const file = document.getElementById('admin-release-file').files[0];
+      if (!file) { errEl.textContent = 'Please select a ZIP file.'; errEl.style.display = 'block'; return; }
+      if (!file.name.toLowerCase().endsWith('.zip')) { errEl.textContent = 'Only .zip files are allowed.'; errEl.style.display = 'block'; return; }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('description', description);
+      formData.append('version', version);
+      try {
+        const res = await fetch(`${API_BASE}/releases`, { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: formData });
+        if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+        adminCancelEditRelease(); adminLoadReleases(); showAdminToast('Release uploaded!');
+      } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    }
+  }
+
+  async function adminDeleteRelease(id, name) {
+    if (!confirm(`Delete release "${name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/releases/${id}`, { method: 'DELETE', headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      if (!res.ok) throw new Error('Delete failed');
+      adminLoadReleases(); showAdminToast('Release deleted.');
     } catch (err) { alert('Delete failed: ' + err.message); }
   }
 
