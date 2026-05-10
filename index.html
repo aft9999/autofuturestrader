@@ -5716,7 +5716,7 @@
           </div>
           <div id="release-form-error" style="display:none; color:#ff4a4a; font-size:13px;"></div>
           <div style="display:flex; gap:10px;">
-            <button onclick="adminSaveRelease()" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Save Release</button>
+            <button onclick="adminSaveRelease()" style="background:linear-gradient(135deg,var(--cyan),#1a7ee8); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Upload Release</button>
             <button id="release-cancel-edit" onclick="adminCancelEditRelease()" style="display:none; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:11px 24px; font-size:14px; cursor:pointer;">Cancel</button>
           </div>
         </div>
@@ -6179,6 +6179,7 @@
     document.getElementById('release-form-title').textContent = '✏️ Edit Release';
     document.getElementById('release-cancel-edit').style.display = 'inline-block';
     document.getElementById('release-file-group').style.display = 'none';
+    document.querySelector('[onclick="adminSaveRelease()"]').textContent = 'Save Changes';
   }
 
   function adminCancelEditRelease() {
@@ -6189,6 +6190,7 @@
     document.getElementById('release-cancel-edit').style.display = 'none';
     document.getElementById('release-file-group').style.display = 'block';
     document.getElementById('admin-release-file').value = '';
+    document.querySelector('[onclick="adminSaveRelease()"]').textContent = 'Upload Release';
   }
 
   async function adminSaveRelease() {
