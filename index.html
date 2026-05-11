@@ -1759,6 +1759,7 @@
       <button class="dnav-tab" data-tab="account" onclick="switchDashTab('account')">Account</button>
       <button class="dnav-tab" data-tab="templates" onclick="switchDashTab('templates')">Templates</button>
       <button class="dnav-tab" data-tab="releases" onclick="switchDashTab('releases')">Releases</button>
+      <button class="dnav-tab" data-tab="documents" onclick="switchDashTab('documents')">Documents &amp; Videos</button>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
 
@@ -2164,6 +2165,35 @@
         <div id="releases-list" style="display:flex; flex-direction:column; gap:12px;"></div>
       </div>
     </div><!-- /releases -->
+
+    <!-- DOCUMENTS & VIDEOS TAB -->
+    <div id="dtab-documents" class="dash-tab-panel" style="display:none;">
+      <div style="max-width:900px; margin:0 auto; padding:0 8px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h2 style="margin:0 0 4px; font-size:22px; font-weight:800; color:var(--text-primary);">Documents &amp; Videos</h2>
+            <p style="margin:0; font-size:13px; color:var(--text-muted);">Access trading guides, tutorials, and educational videos.</p>
+          </div>
+        </div>
+        <div id="documents-loading" style="text-align:center; padding:48px; color:var(--text-dim); font-size:14px;">Loading&hellip;</div>
+        <div id="documents-empty" style="display:none; text-align:center; padding:48px;">
+          <div style="font-size:40px; margin-bottom:12px;">📚</div>
+          <div style="color:var(--text-muted); font-size:15px;">No documents or videos available yet.</div>
+        </div>
+        <div id="documents-list" style="display:none; flex-direction:column; gap:12px;"></div>
+      </div>
+
+      <!-- Viewer modal -->
+      <div id="doc-viewer-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+        <div style="background:var(--bg-card); border-radius:16px; width:100%; max-width:900px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
+            <div id="doc-viewer-title" style="font-size:16px; font-weight:700; color:var(--text-primary);"></div>
+            <button onclick="closeDocViewer()" style="background:rgba(255,255,255,0.1); border:none; color:var(--text-primary); border-radius:8px; padding:8px 16px; cursor:pointer; font-size:13px;">✕ Close</button>
+          </div>
+          <div id="doc-viewer-content" style="flex:1; overflow:auto; min-height:400px;"></div>
+        </div>
+      </div>
+    </div><!-- /documents -->
 
   </div><!-- /dash-body -->
 </div><!-- /member-dashboard -->
@@ -4109,7 +4139,7 @@
 
   function switchDashTab(tab) {
     dashCurrentTab = tab;
-    ['overview','history','account','templates','releases'].forEach(t => {
+    ['overview','history','account','templates','releases','documents'].forEach(t => {
       document.getElementById('dtab-' + t).style.display = t === tab ? 'block' : 'none';
       const btn = document.querySelector(`.dnav-tab[data-tab="${t}"]`);
       if (btn) btn.classList.toggle('active', t === tab);
@@ -4117,6 +4147,7 @@
     if (tab === 'history') renderHistoryTab();
     if (tab === 'templates') loadTemplates();
     if (tab === 'releases') loadReleases();
+    if (tab === 'documents') loadDocuments();
   }
 
   // &#9472;&#9472; SIMULATED DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -5619,6 +5650,7 @@
         <button class="admin-tab" id="atab-signatures" onclick="switchAdminTab('signatures')">&#x270D; Signatures</button>
         <button class="admin-tab" id="atab-templates" onclick="switchAdminTab('templates')">&#x1F4C2; Templates</button>
         <button class="admin-tab" id="atab-releases" onclick="switchAdminTab('releases')">&#x1F4E6; Releases</button>
+        <button class="admin-tab" id="atab-documents" onclick="switchAdminTab('documents')">&#x1F4DA; Docs &amp; Videos</button>
         <button class="admin-tab" id="atab-discounts" onclick="switchAdminTab('discounts')">&#x1F3F7; Discounts</button>
       </div>
 
@@ -5759,6 +5791,44 @@
         </div>
       </div>
     </div><!-- /admin-panel-releases -->
+
+    <!-- ADMIN DOCUMENTS PANEL -->
+    <div id="admin-panel-documents" style="display:none;">
+      <div style="background:var(--bg-card2); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px;">
+        <h3 id="document-form-title" style="margin:0 0 16px; font-size:16px; font-weight:700; color:var(--text-primary);">⬆ Upload New Document or Video</h3>
+        <input type="hidden" id="document-edit-id" value="" />
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div id="document-file-group">
+            <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">FILE * (PDF, DOC, DOCX, MP4, MOV, AVI, WEBM, JPG, PNG)</label>
+            <input type="file" id="admin-document-file" accept=".pdf,.doc,.docx,.mp4,.mov,.avi,.mkv,.webm,.jpg,.jpeg,.png,.gif,.zip" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box; cursor:pointer;" />
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div>
+              <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">TITLE</label>
+              <input type="text" id="document-title" placeholder="e.g. Getting Started Guide" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="font-size:12px; color:var(--text-muted); font-weight:600; display:block; margin-bottom:6px;">DESCRIPTION</label>
+              <input type="text" id="document-description" placeholder="e.g. Step by step setup guide" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
+            </div>
+          </div>
+          <div id="document-form-error" style="display:none; color:#ff4a4a; font-size:13px;"></div>
+          <div style="display:flex; gap:10px;">
+            <button onclick="adminSaveDocument()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Upload</button>
+            <button id="document-cancel-edit" onclick="adminCancelEditDocument()" style="display:none; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text-muted); border-radius:8px; padding:11px 24px; font-size:14px; cursor:pointer;">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <h3 style="margin:0; font-size:16px; font-weight:700; color:var(--text-primary);">Uploaded Documents &amp; Videos</h3>
+          <button onclick="adminLoadDocuments()" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x21BA; Refresh</button>
+        </div>
+        <div id="admin-documents-list" style="display:flex; flex-direction:column; gap:10px;">
+          <div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>
+        </div>
+      </div>
+    </div><!-- /admin-panel-documents -->
 
     <!-- ADMIN DISCOUNTS PANEL -->
     <div id="admin-panel-discounts" style="display:none;">
@@ -6010,13 +6080,14 @@
   // &#9472;&#9472; TABS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['subscribers','signatures','templates','discounts','releases'].forEach(t => {
+    ['subscribers','signatures','templates','discounts','releases','documents'].forEach(t => {
       document.getElementById('atab-' + t).classList.toggle('active', t === tab);
       document.getElementById('admin-panel-' + t).style.display = t === tab ? 'block' : 'none';
     });
     if (tab === 'templates') adminLoadTemplates();
     if (tab === 'discounts') adminLoadCoupons();
     if (tab === 'releases') adminLoadReleases();
+    if (tab === 'documents') adminLoadDocuments();
   }
 
   // ── ADMIN COUPONS ──────────────────────────────────────────────────────────
@@ -6255,6 +6326,219 @@
       const res = await fetch(`${API_BASE}/releases/${id}`, { method: 'DELETE', headers: { 'x-admin-password': ADMIN_PASSWORD } });
       if (!res.ok) throw new Error('Delete failed');
       adminLoadReleases(); showAdminToast('Release deleted.');
+    } catch (err) { alert('Delete failed: ' + err.message); }
+  }
+
+  // ── DOCUMENTS & VIDEOS ────────────────────────────────────────────────────
+  const VIDEO_EXTS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'];
+  const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.gif'];
+  const PDF_EXTS   = ['.pdf'];
+
+  function docIcon(ext) {
+    if (VIDEO_EXTS.includes(ext)) return '🎬';
+    if (IMAGE_EXTS.includes(ext)) return '🖼️';
+    if (PDF_EXTS.includes(ext))  return '📄';
+    if (ext === '.doc' || ext === '.docx') return '📝';
+    return '📁';
+  }
+
+  function docTypeLabel(ext) {
+    if (VIDEO_EXTS.includes(ext)) return 'Video';
+    if (IMAGE_EXTS.includes(ext)) return 'Image';
+    if (PDF_EXTS.includes(ext))   return 'PDF';
+    if (ext === '.doc' || ext === '.docx') return 'Word Doc';
+    return ext.replace('.','').toUpperCase();
+  }
+
+  function canView(ext) {
+    return [...VIDEO_EXTS, ...IMAGE_EXTS, ...PDF_EXTS].includes(ext);
+  }
+
+  async function loadDocuments() {
+    const loading = document.getElementById('documents-loading');
+    const empty   = document.getElementById('documents-empty');
+    const list    = document.getElementById('documents-list');
+    loading.style.display = 'block';
+    empty.style.display   = 'none';
+    list.style.display    = 'none';
+    list.innerHTML        = '';
+    try {
+      const data = await apiCall('/documents');
+      loading.style.display = 'none';
+      if (!data.documents?.length) { empty.style.display = 'block'; return; }
+      list.style.display = 'flex';
+      data.documents.forEach(d => {
+        const date = new Date(d.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+        const sizekb = d.file_size ? `${(d.file_size/1024).toFixed(1)} KB` : '';
+        const ext = d.file_type;
+        const viewable = canView(ext);
+        const card = document.createElement('div');
+        card.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;';
+        card.innerHTML = `
+          <div style="display:flex; align-items:center; gap:16px; flex:1; min-width:0;">
+            <div style="width:44px; height:44px; border-radius:10px; background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.2); display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">${docIcon(ext)}</div>
+            <div style="min-width:0;">
+              <div style="font-size:14px; font-weight:700; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.title || d.original_name}</div>
+              ${d.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${d.description}</div>` : ''}
+              <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">${docTypeLabel(ext)} &middot; ${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            ${viewable ? `<button data-id="${d.id}" data-title="${(d.title||d.original_name).replace(/"/g,'&quot;')}" data-ext="${ext}" onclick="viewDocument(this.dataset.id, this.dataset.title, this.dataset.ext)" style="background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.3); color:#a78bfa; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">👁 View</button>` : ''}
+            <button data-id="${d.id}" data-name="${d.original_name}" onclick="downloadDocument(this.dataset.id, this.dataset.name)" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">⬇ Download</button>
+          </div>`;
+        list.appendChild(card);
+      });
+    } catch (err) {
+      loading.style.display = 'none';
+      empty.style.display = 'block';
+      empty.innerHTML = `<div style="color:#ff4a4a; font-size:14px;">Failed to load: ${err.message}</div>`;
+    }
+  }
+
+  async function downloadDocument(id, filename) {
+    try {
+      const token = getAccessToken();
+      const res = await fetch(`${API_BASE}/documents/${id}/download`, { headers: { 'Authorization': `Bearer ${token}` }, credentials: 'include' });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert('Download failed: ' + err.message); }
+  }
+
+  async function viewDocument(id, title, ext) {
+    const overlay = document.getElementById('doc-viewer-overlay');
+    const content = document.getElementById('doc-viewer-content');
+    const titleEl = document.getElementById('doc-viewer-title');
+    titleEl.textContent = title;
+    content.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-dim);">Loading&hellip;</div>';
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+
+    const token = getAccessToken();
+    const url = `${API_BASE}/documents/${id}/view`;
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    if (VIDEO_EXTS.includes(ext)) {
+      // For video we need a blob URL due to auth headers
+      try {
+        const res = await fetch(url, { headers, credentials: 'include' });
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        content.innerHTML = `<video controls autoplay style="width:100%; max-height:70vh; background:#000;" src="${blobUrl}"></video>`;
+      } catch { content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load video.</div>'; }
+    } else if (IMAGE_EXTS.includes(ext)) {
+      try {
+        const res = await fetch(url, { headers, credentials: 'include' });
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        content.innerHTML = `<img src="${blobUrl}" style="width:100%; height:auto; max-height:70vh; object-fit:contain; display:block;" />`;
+      } catch { content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load image.</div>'; }
+    } else if (PDF_EXTS.includes(ext)) {
+      try {
+        const res = await fetch(url, { headers, credentials: 'include' });
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        content.innerHTML = `<iframe src="${blobUrl}" style="width:100%; height:70vh; border:none;"></iframe>`;
+      } catch { content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load PDF.</div>'; }
+    }
+  }
+
+  function closeDocViewer() {
+    document.getElementById('doc-viewer-overlay').style.display = 'none';
+    document.getElementById('doc-viewer-content').innerHTML = '';
+    document.body.style.overflow = '';
+  }
+
+  // ── ADMIN DOCUMENTS ───────────────────────────────────────────────────────
+  async function adminLoadDocuments() {
+    const listEl = document.getElementById('admin-documents-list');
+    listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>';
+    try {
+      const res = await fetch(`${API_BASE}/documents`, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      const data = await res.json();
+      if (!data.documents?.length) { listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">No documents uploaded yet.</div>'; return; }
+      listEl.innerHTML = '';
+      data.documents.forEach(d => {
+        const date = new Date(d.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        const sizekb = d.file_size ? `${(d.file_size/1024).toFixed(1)} KB` : '';
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;';
+        row.innerHTML = `
+          <div style="flex:1; min-width:0; display:flex; align-items:center; gap:12px;">
+            <span style="font-size:22px;">${docIcon(d.file_type)}</span>
+            <div>
+              <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${d.title || d.original_name} <span style="color:var(--text-dim); font-size:11px;">(${docTypeLabel(d.file_type)})</span></div>
+              ${d.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${d.description}</div>` : ''}
+              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <button data-id="${d.id}" data-title="${(d.title||'').replace(/"/g,'&quot;')}" data-desc="${(d.description||'').replace(/"/g,'&quot;')}" onclick="adminEditDocument(this.dataset.id, this.dataset.title, this.dataset.desc)" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x270F; Edit</button>
+            <button data-id="${d.id}" data-name="${d.original_name}" onclick="adminDeleteDocument(this.dataset.id, this.dataset.name)" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1;</button>
+          </div>`;
+        listEl.appendChild(row);
+      });
+    } catch (err) { listEl.innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:32px;">Error: ${err.message}</div>`; }
+  }
+
+  function adminEditDocument(id, title, desc) {
+    document.getElementById('document-edit-id').value = id;
+    document.getElementById('document-title').value = title;
+    document.getElementById('document-description').value = desc;
+    document.getElementById('document-form-title').textContent = '✏️ Edit Document';
+    document.getElementById('document-cancel-edit').style.display = 'inline-block';
+    document.getElementById('document-file-group').style.display = 'none';
+    document.querySelector('[onclick="adminSaveDocument()"]').textContent = 'Save Changes';
+  }
+
+  function adminCancelEditDocument() {
+    document.getElementById('document-edit-id').value = '';
+    document.getElementById('document-title').value = '';
+    document.getElementById('document-description').value = '';
+    document.getElementById('document-form-title').textContent = '⬆ Upload New Document or Video';
+    document.getElementById('document-cancel-edit').style.display = 'none';
+    document.getElementById('document-file-group').style.display = 'block';
+    document.getElementById('admin-document-file').value = '';
+    document.querySelector('[onclick="adminSaveDocument()"]').textContent = 'Upload';
+  }
+
+  async function adminSaveDocument() {
+    const errEl = document.getElementById('document-form-error');
+    errEl.style.display = 'none';
+    const id = document.getElementById('document-edit-id').value;
+    const title = document.getElementById('document-title').value.trim();
+    const description = document.getElementById('document-description').value.trim();
+    if (id) {
+      try {
+        const res = await fetch(`${API_BASE}/documents/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify({ title, description }) });
+        if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
+        adminCancelEditDocument(); adminLoadDocuments(); showAdminToast('Document updated!');
+      } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    } else {
+      const file = document.getElementById('admin-document-file').files[0];
+      if (!file) { errEl.textContent = 'Please select a file.'; errEl.style.display = 'block'; return; }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', title || file.name);
+      formData.append('description', description);
+      try {
+        const res = await fetch(`${API_BASE}/documents`, { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: formData });
+        if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
+        adminCancelEditDocument(); adminLoadDocuments(); showAdminToast('Document uploaded!');
+      } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
+    }
+  }
+
+  async function adminDeleteDocument(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API_BASE}/documents/${id}`, { method: 'DELETE', headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      if (!res.ok) throw new Error('Delete failed');
+      adminLoadDocuments(); showAdminToast('Document deleted.');
     } catch (err) { alert('Delete failed: ' + err.message); }
   }
 
