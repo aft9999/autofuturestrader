@@ -378,6 +378,7 @@
     flex-direction: column;
     gap: 16px;
   }
+  .hero-mobile-visual { display: none; }
 
   .chart-card {
     background: var(--bg-card);
@@ -1001,7 +1002,8 @@
     .hero { grid-template-columns: 1fr; padding: 48px 24px; }
     .hero-title { font-size: 60px; }
     .hero-visual { display: none; }
-    .stats-bar { grid-template-columns: repeat(2, 1fr); padding: 20px 24px; gap: 24px; }
+    .hero-mobile-visual { display: block; }
+    .hero-visual { display: none; }
     section { padding: 40px 24px; min-height: auto; }
     .features-grid { grid-template-columns: 1fr; }
     .steps { grid-template-columns: 1fr 1fr; }
@@ -1081,6 +1083,32 @@
       </div>
     </div>
 
+    <!-- MOBILE ONLY: Logo, NinjaTrader, Promo Badge -->
+    <div class="hero-mobile-visual" style="margin-top:24px;">
+      <img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/AutoFuturesTrader_Logo.png" alt="AutoFuturesTrader" style="width:100%; border-radius:16px; display:block;" />
+      <div style="display:flex; align-items:center; gap:16px; padding:16px 0; margin-top:8px;">
+        <a href="https://ninjatraderus.pxf.io/DWkzXj" target="_blank" rel="noopener"><img src="https://raw.githubusercontent.com/aft9999/autofuturestrader/main/NinjaTrader_Wordmark_color_RGB.png" alt="NinjaTrader" style="height:26px; width:auto; display:block;" /></a>
+        <div style="width:1px; height:28px; background:rgba(255,255,255,0.2); flex-shrink:0;"></div>
+        <div style="font-size:12px; color:rgba(255,255,255,0.75); line-height:1.4;">Our <strong style="color:#fff;">#1 recommended</strong> trading software platform</div>
+      </div>
+      <p style="font-size:10px; color:rgba(255,255,255,0.35); line-height:1.5; margin-top:4px;">NinjaTrader&#174; is a registered trademark of NinjaTrader Group, LLC. No NinjaTrader company has any affiliation with the owner, developer, or provider of the products or services described herein, or any interest, ownership or otherwise, in any such product or service, or endorses, recommends or approves any such product or service.</p>
+      <div id="promo-badge-mobile" style="display:none; margin-top:16px; cursor:pointer;" onclick="applyPromoBannerCoupon()">
+        <div style="display:inline-flex; align-items:center; gap:12px; background:rgba(2,8,16,0.6); border:1px solid rgba(0,200,248,0.2); border-radius:16px; padding:12px 16px; backdrop-filter:blur(8px); width:100%; box-sizing:border-box;">
+          <div style="flex-shrink:0; width:48px; height:48px;">
+            <svg width="48" height="48" viewBox="0 0 64 64">
+              <polygon points="32,2 38,14 51,8 49,22 63,26 55,37 63,48 49,48 47,62 34,56 32,62 30,56 17,62 15,48 1,48 9,37 1,26 15,22 13,8 26,14" fill="none" stroke="#00c8f8" stroke-width="1.5" stroke-linejoin="round"/>
+              <circle cx="32" cy="32" r="17" fill="rgba(0,200,248,0.1)" stroke="#00c8f8" stroke-width="1"/>
+              <text x="32" y="29" text-anchor="middle" fill="#00c8f8" font-size="7" font-weight="700" font-family="Arial" letter-spacing="1">SPECIAL</text>
+              <text x="32" y="38" text-anchor="middle" fill="#00c8f8" font-size="7" font-weight="700" font-family="Arial" letter-spacing="1">OFFER</text>
+            </svg>
+          </div>
+          <div>
+            <div id="promo-badge-mobile-text" style="font-size:12px; font-weight:700; color:#e8f4ff; line-height:1.4;"></div>
+            <div style="font-size:11px; color:rgba(0,200,248,0.7); margin-top:4px; font-weight:600;">&#x1F449; Click to claim this offer</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div><!-- /hero-left -->
 
@@ -6705,6 +6733,13 @@
           const desc = c.description ? ` — ${c.description}` : '';
           document.getElementById('promo-badge-text').textContent = `Use code ${c.code} for ${label}${desc}${expiry}`;
           document.getElementById('promo-badge').style.display = 'block';
+          // Also update mobile badge
+          const mobileBadge = document.getElementById('promo-badge-mobile');
+          const mobileBadgeText = document.getElementById('promo-badge-mobile-text');
+          if (mobileBadge && mobileBadgeText) {
+            mobileBadgeText.textContent = `Use code ${c.code} for ${label}${desc}${expiry}`;
+            mobileBadge.style.display = 'block';
+          }
         }
       })
       .catch(() => {});
