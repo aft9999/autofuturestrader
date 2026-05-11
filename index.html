@@ -6428,7 +6428,7 @@
         const res = await fetch(url, { headers, credentials: 'include' });
         const blob = await res.blob();
         const blobUrl = URL.createObjectURL(blob);
-        content.innerHTML = `<video controls autoplay style="width:100%; max-height:70vh; background:#000;" src="${blobUrl}"></video>`;
+        content.innerHTML = `<video controls style="width:100%; max-height:70vh; background:#000;" src="${blobUrl}"></video>`;
       } catch { content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load video.</div>'; }
     } else if (IMAGE_EXTS.includes(ext)) {
       try {
