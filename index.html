@@ -2991,10 +2991,7 @@
     document.getElementById('forgot-success').style.display = 'none';
   }
 
-  // Close on overlay click
-  document.getElementById('auth-overlay').addEventListener('click', function(e) {
-    if (e.target === this) closeModal();
-  });
+  // Overlay click disabled — modal stays open until user explicitly closes it
 
   // &#9472;&#9472; PLAN SELECTION &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function selectPlan(plan) {
