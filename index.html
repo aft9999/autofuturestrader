@@ -6728,6 +6728,7 @@
               <div style="display:flex; flex-direction:column; gap:4px;">
                 <button class="admin-del-btn" onclick="confirmDeleteSubscriber('${u.id}','${u.email}')">Delete</button>
                 <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:#a78bfa;" onclick="downloadDisclosurePDF('${u.id}','${u.first_name} ${u.last_name}')">Disclosure</button>
+                <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:${u.is_lifetime ? 'rgba(245,158,11,0.2)' : 'rgba(57,230,0,0.1)'};border-color:${u.is_lifetime ? 'rgba(245,158,11,0.4)' : 'rgba(57,230,0,0.3)'};color:${u.is_lifetime ? '#f59e0b' : '#39e600'};" onclick="toggleLifetime('${u.id}','${u.first_name} ${u.last_name}',${u.is_lifetime ? 'true' : 'false'})">${u.is_lifetime ? '♾ Lifetime ON' : '♾ Set Lifetime'}</button>
               </div>
             </td>
           </tr>`;
@@ -6933,6 +6934,24 @@
 
   // &#9472;&#9472; EXPORT CSV &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   // &#9472;&#9472; DOWNLOAD SIGNED DISCLOSURE PDF &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+  async function toggleLifetime(userId, userName, isCurrentlyLifetime) {
+    const enable = !isCurrentlyLifetime;
+    const msg = enable
+      ? `Give "${userName}" lifetime access? Their subscription will be set to active indefinitely.`
+      : `Remove lifetime access from "${userName}"? Their subscription status will remain active but no longer be lifetime.`;
+    if (!confirm(msg)) return;
+    try {
+      const res = await fetch(`${API_BASE}/admin/subscribers/${userId}/lifetime`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD },
+        body: JSON.stringify({ enable })
+      });
+      if (!res.ok) throw new Error('Failed');
+      showAdminToast(enable ? `♾ Lifetime access granted to ${userName}!` : `Lifetime access removed from ${userName}.`);
+      loadAdminData();
+    } catch (err) { alert('Error: ' + err.message); }
+  }
+
   async function downloadDisclosurePDF(userId, userName) {
     showAdminToast('⏳ Generating PDF...');
     try {
