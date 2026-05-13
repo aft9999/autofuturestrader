@@ -1321,6 +1321,18 @@
     <button onclick="openModal('signin')" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:10px; padding:14px 32px; font-size:15px; font-weight:700; cursor:pointer;">Sign In for Full Access &#x2192;</button>
   </div>
 </section>
+
+<!-- LANDING PAGE DOC VIEWER -->
+<div id="landing-doc-viewer-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; padding:20px;">
+  <div style="background:#0a1e35; border:1px solid rgba(0,200,248,0.2); border-radius:16px; width:100%; max-width:900px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;">
+      <div id="landing-doc-viewer-title" style="font-size:16px; font-weight:700; color:#e8f4ff;"></div>
+      <button onclick="closeLandingDocViewer()" style="background:rgba(255,255,255,0.1); border:none; color:#e8f4ff; border-radius:8px; padding:8px 16px; cursor:pointer; font-size:13px;">✕ Close</button>
+    </div>
+    <div id="landing-doc-viewer-content" style="flex:1; overflow:auto; min-height:400px;"></div>
+  </div>
+</div>
+
 <section class="cta-section">
   <div class="section-label" style="justify-content:center; margin-bottom: 20px;">Get Started Today</div>
   <h2 class="section-title">Trade Smarter,<br><span>Not Harder</span></h2>
@@ -3149,20 +3161,19 @@
   }
 
   async function landingViewDoc(id, title, ext) {
-    // Reuse the doc viewer modal
-    const overlay = document.getElementById('doc-viewer-overlay');
-    const content = document.getElementById('doc-viewer-content');
-    const titleEl = document.getElementById('doc-viewer-title');
+    const overlay = document.getElementById('landing-doc-viewer-overlay');
+    const content = document.getElementById('landing-doc-viewer-content');
+    const titleEl = document.getElementById('landing-doc-viewer-title');
     if (!overlay) return;
     titleEl.textContent = title;
-    content.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-dim);">Loading&hellip;</div>';
+    content.innerHTML = '<div style="text-align:center; padding:40px; color:#8ab4cc;">Loading&hellip;</div>';
     overlay.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     const url = `${API_BASE}/documents/${id}/view`;
     const VIDEO_EXTS = ['.mp4','.mov','.avi','.mkv','.webm'];
     const IMAGE_EXTS = ['.jpg','.jpeg','.png','.gif'];
     try {
-      const res = await fetch(url); // No auth needed for landing docs
+      const res = await fetch(url);
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
       if (VIDEO_EXTS.includes(ext)) {
@@ -3175,6 +3186,14 @@
     } catch {
       content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load content.</div>';
     }
+  }
+
+  function closeLandingDocViewer() {
+    const overlay = document.getElementById('landing-doc-viewer-overlay');
+    const content = document.getElementById('landing-doc-viewer-content');
+    if (overlay) overlay.style.display = 'none';
+    if (content) content.innerHTML = '';
+    document.body.style.overflow = '';
   }
 
   function applyPromoBannerCoupon() {
