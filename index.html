@@ -2877,6 +2877,26 @@
   function getUserId() { return localStorage.getItem('aft_user_id'); }
   function setUserId(id) { localStorage.setItem('aft_user_id', id); }
 
+  function isSessionExpired(err) {
+    return err.message && (err.message.includes('Session expired') || err.message.includes('expired') || err.message.includes('Unauthorized') || err.message.includes('Invalid token'));
+  }
+
+  function handleSessionError(err) {
+    if (isSessionExpired(err)) {
+      setAccessToken(null);
+      setCurrentUser(null);
+      const dash = document.getElementById('member-dashboard');
+      if (dash) dash.style.display = 'none';
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        openModal('signin');
+        showError('signin-error', 'Your session has expired. Please sign in again.');
+      }, 100);
+      return true;
+    }
+    return false;
+  }
+
   async function apiCall(path, options = {}) {
     const token = getAccessToken();
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
@@ -4103,6 +4123,7 @@
       loading.style.display = 'none';
       empty.style.display = 'block';
       empty.innerHTML = `<div style="color:#ff4a4a; font-size:14px;">Failed to load templates: ${err.message}</div>`;
+      if (handleSessionError(err)) return;
     }
   }
 
@@ -6233,6 +6254,7 @@
       loading.style.display = 'none';
       empty.style.display = 'block';
       empty.innerHTML = `<div style="color:#ff4a4a; font-size:14px;">Failed to load releases: ${err.message}</div>`;
+      if (handleSessionError(err)) return;
     }
   }
 
@@ -6399,6 +6421,7 @@
       loading.style.display = 'none';
       empty.style.display = 'block';
       empty.innerHTML = `<div style="color:#ff4a4a; font-size:14px;">Failed to load: ${err.message}</div>`;
+      if (handleSessionError(err)) return;
     }
   }
 
