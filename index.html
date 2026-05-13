@@ -1036,6 +1036,7 @@
     <li><a href="#how" onclick="scrollToSection('how'); return false;">How It Works</a></li>
     <li><a href="#pricing" onclick="scrollToSection('pricing'); return false;">Pricing</a></li>
     <li><a href="#faq" onclick="scrollToSection('faq'); return false;">FAQ</a></li>
+    <li><a href="#docsvideos" onclick="scrollToSection('docsvideos'); return false;">Docs &amp; Videos</a></li>
     <li><a href="javascript:void(0)" onclick="openPlatformModal();" style="color:#e8401c; font-weight:600;">Platform</a></li>
     <li><a href="javascript:void(0)" onclick="openDataModal();" style="color:#e8401c; font-weight:600;">Data</a></li>
   </ul>
@@ -1304,7 +1305,22 @@
   <div class="back-to-top-wrap"><button class="back-to-top-btn" onclick="scrollToTop()">&#8593; Back to Top</button></div>
 </section>
 
-<!-- CTA SECTION -->
+<!-- DOCS & VIDEOS -->
+<section id="docsvideos" style="padding:80px 80px;">
+  <div style="text-align:center; max-width:600px; margin:0 auto 40px;">
+    <div class="section-label" style="justify-content:center;">RESOURCES</div>
+    <h2 class="section-title">Docs &amp; Videos</h2>
+    <p style="color:var(--text-muted); font-size:16px; margin-top:12px;">Trading guides, tutorials and educational resources to help you get started.</p>
+  </div>
+
+  <div id="landing-docs-loading" style="text-align:center; padding:32px; color:var(--text-dim);">Loading resources&hellip;</div>
+  <div id="landing-docs-empty" style="display:none; text-align:center; padding:32px; color:var(--text-muted);">No public resources available yet. Check back soon!</div>
+  <div id="landing-docs-list" style="display:none; max-width:900px; margin:0 auto; display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px;"></div>
+
+  <div style="text-align:center; margin-top:40px;">
+    <button onclick="openModal('signin')" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:10px; padding:14px 32px; font-size:15px; font-weight:700; cursor:pointer;">Sign In for Full Access &#x2192;</button>
+  </div>
+</section>
 <section class="cta-section">
   <div class="section-label" style="justify-content:center; margin-bottom: 20px;">Get Started Today</div>
   <h2 class="section-title">Trade Smarter,<br><span>Not Harder</span></h2>
@@ -3130,6 +3146,35 @@
     document.body.style.overflow = 'hidden';
     showPaymentModal();
     updatePayBtnText();
+  }
+
+  async function landingViewDoc(id, title, ext) {
+    // Reuse the doc viewer modal
+    const overlay = document.getElementById('doc-viewer-overlay');
+    const content = document.getElementById('doc-viewer-content');
+    const titleEl = document.getElementById('doc-viewer-title');
+    if (!overlay) return;
+    titleEl.textContent = title;
+    content.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-dim);">Loading&hellip;</div>';
+    overlay.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    const url = `${API_BASE}/documents/${id}/view`;
+    const VIDEO_EXTS = ['.mp4','.mov','.avi','.mkv','.webm'];
+    const IMAGE_EXTS = ['.jpg','.jpeg','.png','.gif'];
+    try {
+      const res = await fetch(url); // No auth needed for landing docs
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      if (VIDEO_EXTS.includes(ext)) {
+        content.innerHTML = `<video controls style="width:100%; max-height:70vh; background:#000;" src="${blobUrl}"></video>`;
+      } else if (IMAGE_EXTS.includes(ext)) {
+        content.innerHTML = `<img src="${blobUrl}" style="width:100%; height:auto; max-height:70vh; object-fit:contain; display:block;" />`;
+      } else if (ext === '.pdf') {
+        content.innerHTML = `<iframe src="${blobUrl}" style="width:100%; height:70vh; border:none;"></iframe>`;
+      }
+    } catch {
+      content.innerHTML = '<div style="padding:32px; color:#ff4a4a;">Failed to load content.</div>';
+    }
   }
 
   function applyPromoBannerCoupon() {
@@ -5839,6 +5884,15 @@
               <input type="text" id="document-description" placeholder="e.g. Step by step setup guide" style="background:rgba(0,200,248,0.04); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text-primary); font-size:13px; width:100%; box-sizing:border-box;" />
             </div>
           </div>
+          <div style="display:flex; gap:24px; margin-top:4px; flex-wrap:wrap;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-muted);">
+              <input type="checkbox" id="document-show-landing" style="width:16px;height:16px;" />
+              Show on Landing Page (public visitors)
+            </label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-muted);">
+              <input type="checkbox" id="document-show-dashboard" style="width:16px;height:16px;" />
+              Show on Signed-In Dashboard
+            </label>
           <div id="document-form-error" style="display:none; color:#ff4a4a; font-size:13px;"></div>
           <div style="display:flex; gap:10px;">
             <button onclick="adminSaveDocument()" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:11px 24px; font-size:14px; font-weight:700; cursor:pointer;">Upload</button>
@@ -5900,7 +5954,7 @@
           </label>
           <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:var(--text-muted);">
             <input type="checkbox" id="discount-show-landing" style="width:16px;height:16px;" />
-            Show on landing page
+            Show as promo badge (landing page &amp; dashboard based on Applies To)
           </label>
           <div style="display:flex; align-items:center; gap:8px;">
             <label style="font-size:12px; color:var(--text-muted); font-weight:600; white-space:nowrap;">APPLIES TO:</label>
@@ -6138,7 +6192,7 @@
             <div style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.2); border-radius:8px; padding:6px 14px; font-size:14px; font-weight:800; color:var(--cyan); letter-spacing:0.05em;">${c.code}</div>
             <div>
               <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${discountLabel}${c.description ? ' — ' + c.description : ''}</div>
-              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Valid: ${validFrom} → ${validTo} &nbsp;|&nbsp; ${c.is_active ? '<span style="color:#39e600;">Active</span>' : '<span style="color:#ff4a4a;">Inactive</span>'} &nbsp;|&nbsp; ${c.applies_to === 'new_users' ? 'New users' : c.applies_to === 'existing_users' ? '<span style="color:#a78bfa;">Existing users</span>' : '<span style="color:#f59e0b;">All users</span>'}${c.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#f59e0b;">On landing</span>' : ''}</div>
+              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">Valid: ${validFrom} → ${validTo} &nbsp;|&nbsp; ${c.is_active ? '<span style="color:#39e600;">Active</span>' : '<span style="color:#ff4a4a;">Inactive</span>'} &nbsp;|&nbsp; ${c.applies_to === 'new_users' ? 'New users only' : c.applies_to === 'existing_users' ? '<span style="color:#a78bfa;">Existing users only</span>' : '<span style="color:#f59e0b;">All users</span>'}${c.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#00c8f8;">&#128081; Promo badge ON</span>' : ''}</div>
             </div>
           </div>
           <div style="display:flex; gap:8px; flex-shrink:0;">
@@ -6502,11 +6556,11 @@
             <div>
               <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${d.title || d.original_name} <span style="color:var(--text-dim); font-size:11px;">(${docTypeLabel(d.file_type)})</span></div>
               ${d.description ? `<div style="font-size:12px; color:var(--text-muted); margin-top:2px;">${d.description}</div>` : ''}
-              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}</div>
+              <div style="font-size:11px; color:var(--text-dim); margin-top:3px;">${date}${sizekb ? ' &middot; ' + sizekb : ''}${d.show_on_landing ? ' &nbsp;|&nbsp; <span style="color:#f59e0b;">🌐 Landing</span>' : ''}${d.show_on_dashboard ? ' &nbsp;|&nbsp; <span style="color:var(--cyan);">📊 Dashboard</span>' : ''}</div>
             </div>
           </div>
           <div style="display:flex; gap:8px; flex-shrink:0;">
-            <button data-id="${d.id}" data-title="${(d.title||'').replace(/"/g,'&quot;')}" data-desc="${(d.description||'').replace(/"/g,'&quot;')}" onclick="adminEditDocument(this.dataset.id, this.dataset.title, this.dataset.desc)" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x270F; Edit</button>
+            <button data-doc="${encodeURIComponent(JSON.stringify({id:d.id,title:d.title||'',description:d.description||'',show_on_landing:d.show_on_landing,show_on_dashboard:d.show_on_dashboard}))}" onclick="adminEditDocument(JSON.parse(decodeURIComponent(this.dataset.doc)))" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x270F; Edit</button>
             <button data-id="${d.id}" data-name="${d.original_name}" onclick="adminDeleteDocument(this.dataset.id, this.dataset.name)" style="background:rgba(255,74,74,0.1); border:1px solid rgba(255,74,74,0.3); color:#ff4a4a; border-radius:8px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x1F5D1;</button>
           </div>`;
         listEl.appendChild(row);
@@ -6514,10 +6568,12 @@
     } catch (err) { listEl.innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:32px;">Error: ${err.message}</div>`; }
   }
 
-  function adminEditDocument(id, title, desc) {
-    document.getElementById('document-edit-id').value = id;
-    document.getElementById('document-title').value = title;
-    document.getElementById('document-description').value = desc;
+  function adminEditDocument(d) {
+    document.getElementById('document-edit-id').value = d.id;
+    document.getElementById('document-title').value = d.title || '';
+    document.getElementById('document-description').value = d.description || '';
+    document.getElementById('document-show-landing').checked = d.show_on_landing || false;
+    document.getElementById('document-show-dashboard').checked = d.show_on_dashboard || false;
     document.getElementById('document-form-title').textContent = '✏️ Edit Document';
     document.getElementById('document-cancel-edit').style.display = 'inline-block';
     document.getElementById('document-file-group').style.display = 'none';
@@ -6528,6 +6584,8 @@
     document.getElementById('document-edit-id').value = '';
     document.getElementById('document-title').value = '';
     document.getElementById('document-description').value = '';
+    document.getElementById('document-show-landing').checked = false;
+    document.getElementById('document-show-dashboard').checked = false;
     document.getElementById('document-form-title').textContent = '⬆ Upload New Document or Video';
     document.getElementById('document-cancel-edit').style.display = 'none';
     document.getElementById('document-file-group').style.display = 'block';
@@ -6541,9 +6599,11 @@
     const id = document.getElementById('document-edit-id').value;
     const title = document.getElementById('document-title').value.trim();
     const description = document.getElementById('document-description').value.trim();
+    const show_on_landing = document.getElementById('document-show-landing').checked;
+    const show_on_dashboard = document.getElementById('document-show-dashboard').checked;
     if (id) {
       try {
-        const res = await fetch(`${API_BASE}/documents/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify({ title, description }) });
+        const res = await fetch(`${API_BASE}/documents/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-password': ADMIN_PASSWORD }, body: JSON.stringify({ title, description, show_on_landing, show_on_dashboard }) });
         if (!res.ok) throw new Error((await res.json()).error || 'Update failed');
         adminCancelEditDocument(); adminLoadDocuments(); showAdminToast('Document updated!');
       } catch (err) { errEl.textContent = err.message; errEl.style.display = 'block'; }
@@ -6554,6 +6614,8 @@
       formData.append('file', file);
       formData.append('title', title || file.name);
       formData.append('description', description);
+      formData.append('show_on_landing', show_on_landing);
+      formData.append('show_on_dashboard', show_on_dashboard);
       try {
         const res = await fetch(`${API_BASE}/documents`, { method: 'POST', headers: { 'x-admin-password': ADMIN_PASSWORD }, body: formData });
         if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
@@ -7056,7 +7118,41 @@
   let promoBannerCoupon = null;
 
   window.addEventListener('DOMContentLoaded', function() {
-    // Load promo badge from active landing coupons
+    // Load public docs & videos for landing page
+    fetch(`${API_BASE}/documents?audience=landing`)
+      .then(r => r.json())
+      .then(data => {
+        const loading = document.getElementById('landing-docs-loading');
+        const empty   = document.getElementById('landing-docs-empty');
+        const list    = document.getElementById('landing-docs-list');
+        if (loading) loading.style.display = 'none';
+        if (!data.documents?.length) { if (empty) empty.style.display = 'block'; return; }
+        if (list) {
+          list.style.display = 'grid';
+          const VIDEO_EXTS = ['.mp4','.mov','.avi','.mkv','.webm'];
+          const IMAGE_EXTS = ['.jpg','.jpeg','.png','.gif'];
+          const PDF_EXTS   = ['.pdf'];
+          data.documents.forEach(d => {
+            const icon = VIDEO_EXTS.includes(d.file_type) ? '🎬' : IMAGE_EXTS.includes(d.file_type) ? '🖼️' : d.file_type === '.pdf' ? '📄' : '📁';
+            const viewable = [...VIDEO_EXTS, ...IMAGE_EXTS, ...PDF_EXTS].includes(d.file_type);
+            const card = document.createElement('div');
+            card.style.cssText = 'background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:20px; display:flex; flex-direction:column; gap:10px;';
+            card.innerHTML = `
+              <div style="font-size:28px;">${icon}</div>
+              <div style="font-size:15px; font-weight:700; color:var(--text-primary);">${d.title || d.original_name}</div>
+              ${d.description ? `<div style="font-size:13px; color:var(--text-muted); flex:1;">${d.description}</div>` : ''}
+              ${viewable
+                ? `<button data-id="${d.id}" data-title="${(d.title||d.original_name).replace(/"/g,'&quot;')}" data-ext="${d.file_type}" onclick="landingViewDoc(this.dataset.id, this.dataset.title, this.dataset.ext)" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-top:auto;">👁 View</button>`
+                : `<button onclick="openModal('signin')" style="background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-top:auto;">Sign In to Access &#x2192;</button>`
+              }`;
+            list.appendChild(card);
+          });
+        }
+      })
+      .catch(() => {
+        const loading = document.getElementById('landing-docs-loading');
+        if (loading) loading.style.display = 'none';
+      });
     fetch(`${API_BASE}/coupons/public`)
       .then(r => r.json())
       .then(data => {
