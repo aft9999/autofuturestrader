@@ -3986,7 +3986,7 @@
           window._memberPromoCoupon = c;
           const label = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
           const expiry = c.valid_to ? ` · Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
-          document.getElementById('dash-promo-text').innerHTML = `Special offer: Use code <span style="background:rgba(0,200,248,0.15);color:var(--cyan);border:1px solid rgba(0,200,248,0.3);border-radius:6px;padding:2px 8px;font-size:13px;letter-spacing:0.05em;">${c.code}</span> for ${label}${c.description ? ' — ' + c.description : ''}${expiry}`;
+          document.getElementById('dash-promo-text').innerHTML = `Special offer: Use code <span style="background:rgba(0,200,248,0.15);color:var(--cyan);border:1px solid rgba(0,200,248,0.3);border-radius:6px;padding:2px 8px;font-size:13px;letter-spacing:0.05em;">${c.code}</span> for ${label}${c.description ? ' ' + c.description : ''}${expiry}`;
           document.getElementById('dash-promo-notice').style.display = 'block';
         } else {
           document.getElementById('dash-promo-notice').style.display = 'none';
@@ -7044,7 +7044,7 @@
           promoBannerCoupon = c;
           const label = c.discount_type === 'percent' ? `${c.discount_value}% off` : `$${c.discount_value} off`;
           const expiry = c.valid_to ? ` · Expires ${new Date(c.valid_to).toLocaleDateString('en-US',{month:'short',day:'numeric'})}` : '';
-          const desc = c.description ? ` — ${c.description}` : '';
+          const desc = c.description ? ` ${c.description}` : '';
           document.getElementById('promo-badge-text').textContent = `Use code ${c.code} for ${label}${desc}${expiry}`;
           document.getElementById('promo-badge').style.display = 'block';
           // Also update mobile badge
