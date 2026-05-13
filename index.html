@@ -2897,10 +2897,19 @@
           return retryData;
         }
       } catch (e) {}
-      // Refresh failed — sign out
+      // Refresh failed — clear session and show sign-in modal
       setAccessToken(null);
       setCurrentUser(null);
-      throw new Error('Session expired. Please sign in again.');
+      // Close dashboard if open
+      const dash = document.getElementById('member-dashboard');
+      if (dash) dash.style.display = 'none';
+      document.body.style.overflow = '';
+      // Open sign-in modal with friendly message
+      setTimeout(() => {
+        openModal('signin');
+        showError('signin-error', 'Your session has expired. Please sign in again.');
+      }, 100);
+      throw new Error('Session expired');
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
