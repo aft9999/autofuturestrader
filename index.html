@@ -6706,7 +6706,9 @@
             : u.subscription_status === 'trialing' ? 'admin-pill-amber'
             : u.subscription_status === 'cancelled' ? 'admin-pill-red'
             : 'admin-pill-red';
-          const statusPill = `<span class="admin-pill ${statusColor}">${u.subscription_status || 'No sub'}</span>`;
+          const statusPill = u.is_lifetime
+            ? `<span class="admin-pill admin-pill-green">ACTIVE</span> <span class="admin-pill" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);">&#9854; LIFETIME</span>`
+            : `<span class="admin-pill ${statusColor}">${(u.subscription_status || 'No sub').toUpperCase()}</span>`;
           const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '&#8212;';
           const trialEnd = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;';
           const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
