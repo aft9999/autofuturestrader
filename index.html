@@ -7174,7 +7174,9 @@
               <div style="font-size:15px; font-weight:700; color:var(--text-primary);">${d.title || d.original_name}</div>
               ${d.description ? `<div style="font-size:13px; color:var(--text-muted); flex:1;">${d.description}</div>` : ''}
               ${viewable
-                ? `<button data-id="${d.id}" data-title="${(d.title||d.original_name).replace(/"/g,'&quot;')}" data-ext="${d.file_type}" onclick="landingViewDoc(this.dataset.id, this.dataset.title, this.dataset.ext)" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-top:auto;">👁 View</button>`
+                ? (IMAGE_EXTS.includes(d.file_type)
+    ? `<img src="${API_BASE}/documents/${d.id}/view" style="width:100%; border-radius:8px; margin-top:8px; display:block;" alt="${(d.title||d.original_name)}" />`
+    : `<button data-id="${d.id}" data-title="${(d.title||d.original_name).replace(/"/g,'&quot;')}" data-ext="${d.file_type}" onclick="landingViewDoc(this.dataset.id, this.dataset.title, this.dataset.ext)" style="background:linear-gradient(135deg,#a78bfa,#7c3aed); color:#fff; border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-top:auto;">👁 View</button>`)
                 : `<button onclick="openModal('signin')" style="background:rgba(167,139,250,0.15); color:#a78bfa; border:1px solid rgba(167,139,250,0.3); border-radius:8px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; margin-top:auto;">Sign In to Access &#x2192;</button>`
               }`;
             list.appendChild(card);
