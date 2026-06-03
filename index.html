@@ -7012,24 +7012,27 @@
     );
   }
 
-  function confirmDeleteSubscriber(email) {
+  function confirmDeleteSubscriber(userId, email) {
+    const okBtn = document.getElementById('admin-confirm-ok');
+    okBtn.textContent = 'Delete';
+    okBtn.style.background = 'rgba(220,38,38,0.15)';
+    okBtn.style.borderColor = 'rgba(220,38,38,0.4)';
+    okBtn.style.color = '#ef4444';
     showAdminConfirm(
       `Delete subscriber?`,
       `This will permanently delete the account for ${email}. If they are currently signed in, they will be signed out.`,
-      () => {
-        const users = getUsers();
-        delete users[email];
-        saveUsers(users);
-        // Sign out if it's the current user
-        const current = getCurrentUser();
-        if (current && current.email === email) {
-          localStorage.removeItem('aft_current_user');
-          document.getElementById('nav-signin-btn').style.display = '';
-          document.getElementById('nav-signup-btn').style.display = '';
-          document.getElementById('nav-user-area').style.display = 'none';
+      async () => {
+        try {
+          const res = await fetch(`${API_BASE}/admin/subscribers/${userId}`, {
+            method: 'DELETE',
+            headers: { 'X-Admin-Password': ADMIN_PASSWORD }
+          });
+          if (!res.ok) throw new Error('Delete failed');
+          loadAdminData();
+          showAdminToast(`Subscriber ${email} deleted.`);
+        } catch (err) {
+          showAdminToast('Failed to delete subscriber: ' + err.message);
         }
-        loadAdminData();
-        showAdminToast(`Subscriber ${email} deleted.`);
       }
     );
   }
