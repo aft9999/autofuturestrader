@@ -5827,19 +5827,6 @@
       </div>
 
       <!-- Confirm Dialog -->
-      <div id="admin-confirm" style="display:none;" class="admin-confirm-overlay">
-        <div class="admin-confirm-box">
-          <div style="font-size:32px; margin-bottom:12px;">&#x26A0;</div>
-          <div id="admin-confirm-msg" style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:8px;"></div>
-          <div id="admin-confirm-sub" style="font-size:13px; color:var(--text-muted); margin-bottom:22px; line-height:1.6;"></div>
-          <div style="display:flex; gap:10px; justify-content:center;">
-            <button class="admin-action-btn admin-btn-danger" id="admin-confirm-ok">Yes, Delete</button>
-            <button class="admin-action-btn" onclick="document.getElementById('admin-confirm').style.display='none'"
-              style="background:rgba(255,255,255,0.05); border-color:var(--border);">Cancel</button>
-          </div>
-        </div>
-      </div>
-
     </div><!-- /admin-dashboard -->
 
     <!-- ADMIN TEMPLATES PANEL -->
@@ -6034,6 +6021,18 @@
     </div><!-- /admin-panel-discounts -->
 
   </div><!-- /admin-container -->
+</div>
+
+<div id="admin-confirm" style="display:none;" class="admin-confirm-overlay">
+  <div class="admin-confirm-box">
+    <div style="font-size:32px; margin-bottom:12px;">&#x26A0;</div>
+    <div id="admin-confirm-msg" style="font-size:15px; font-weight:700; color:var(--text-primary); margin-bottom:8px;"></div>
+    <div id="admin-confirm-sub" style="font-size:13px; color:var(--text-muted); margin-bottom:22px; line-height:1.6;"></div>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button class="admin-action-btn admin-btn-danger" id="admin-confirm-ok">Yes, Delete</button>
+      <button class="admin-action-btn" onclick="document.getElementById('admin-confirm').style.display='none'" style="background:rgba(255,255,255,0.05); border-color:var(--border);">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <style>
