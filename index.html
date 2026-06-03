@@ -1477,11 +1477,7 @@
         <label class="field-label">Email Address <span style="color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0; font-size:11px;">(email used for your <span style="color:#e8401c; font-weight:700;">NinjaTrader</span> account)</span></label>
         <input type="email" id="signup-email" class="auth-input" placeholder="trader@example.com" />
       </div>
-      <div class="field-group">
-        <label class="field-label"><span style="color:#e8401c; font-weight:700;">NinjaTrader</span> User ID <span style="color:var(--text-dim); font-size:12px; font-weight:400;">(required)</span></label>
-        <input type="text" id="signup-ntid" class="auth-input" placeholder="e.g. trader@example.com" style="font-family:'JetBrains Mono',monospace;" />
-        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">The email ID you used to sign up with NinjaTrader</div>
-      </div>
+
       <div class="field-group">
         <label class="field-label">Password</label>
         <div style="position:relative;">
@@ -3334,7 +3330,6 @@
     const fname = document.getElementById('signup-fname').value.trim();
     const lname = document.getElementById('signup-lname').value.trim();
     const email = document.getElementById('signup-email').value.trim().toLowerCase();
-    const ntid = document.getElementById('signup-ntid').value.trim();
     const password = document.getElementById('signup-password').value;
     const confirm = document.getElementById('signup-confirm').value;
     const phone = document.getElementById('signup-phone').value.trim();
@@ -3342,7 +3337,6 @@
 
     if (!fname || !lname) return showError('signup-error', 'Please enter your full name.');
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('signup-error', 'Please enter a valid email address.');
-    if (!ntid) return showError('signup-error', 'Please enter your NinjaTrader User ID.');
     if (!phone) return showError('signup-error', 'Please enter your phone number.');
     if (password.length < 8) return showError('signup-error', 'Password must be at least 8 characters.');
     if (password !== confirm) return showError('signup-error', 'Passwords do not match.');
@@ -3377,14 +3371,14 @@
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
-      pendingSignupData = { fname, lname, email, password, ntid, phone, plan: currentPlan, coupon: appliedCoupon };
+      pendingSignupData = { fname, lname, email, password, phone, plan: currentPlan, coupon: appliedCoupon };
       setLoading('signup-btn-text', 'signup-spinner', false);
       showError('signup-error', '&#9888; Please read and sign the Risk Disclosure before continuing.');
       setTimeout(() => { openRiskDisclosureForSignup(); }, 400);
       return;
     }
 
-    proceedAfterDisclosure({ fname, lname, email, password, ntid, phone });
+    proceedAfterDisclosure({ fname, lname, email, password, phone });
   }
 
   // Stores form data while user goes to sign the disclosure
@@ -3414,12 +3408,11 @@
     return !!signed[email];
   }
 
-  async function proceedAfterDisclosure({ fname, lname, email, password, ntid, phone }) {
+  async function proceedAfterDisclosure({ fname, lname, email, password, phone }) {
     // Restore plan/coupon from pendingSignupData if coming back from disclosure
     if (pendingSignupData) {
       currentPlan = pendingSignupData.plan || currentPlan;
       appliedCoupon = pendingSignupData.coupon || appliedCoupon;
-      ntid = ntid || pendingSignupData.ntid;
       phone = phone || pendingSignupData.phone;
       selectPlan(currentPlan);
     }
@@ -3430,12 +3423,12 @@
 
     // For free trial &#8212; register + activate trial via API
     if (currentPlan === 'trial') {
-      pendingSignup = { fname, lname, email, password, ntid, plan: 'trial', pricePaid: 0, discount: null };
+      pendingSignup = { fname, lname, email, password, plan: 'trial', pricePaid: 0, discount: null };
       setLoading('signup-btn-text', 'signup-spinner', true);
       try {
         const regData = await apiCall('/auth/register', {
           method: 'POST',
-          body: JSON.stringify({ first_name: fname, last_name: lname, email, password, ninja_trader_id: ntid, phone })
+          body: JSON.stringify({ first_name: fname, last_name: lname, email, password, phone })
         });
         setAccessToken(regData.accessToken);
         setUserId(regData.user.id);
@@ -5677,7 +5670,7 @@
         // Re-open auth overlay and proceed
         document.getElementById('auth-overlay').classList.add('active');
         document.body.style.overflow = 'hidden';
-        proceedAfterDisclosure({ fname: pf, lname: pl, email: pe, password: pp, ntid: pendingSignupData?.ntid });
+        proceedAfterDisclosure({ fname: pf, lname: pl, email: pe, password: pp, phone: pendingSignupData?.phone });
       }, 2000);
     }
   }
