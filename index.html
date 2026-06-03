@@ -1501,6 +1501,12 @@
         </div>
       </div>
 
+      <div class="field-group">
+        <label class="field-label">Phone Number <span style="color:#ff4a4a;">*</span></label>
+        <input type="tel" id="signup-phone" class="auth-input" placeholder="e.g. 732-533-9669" />
+        <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">Used for account verification and support</div>
+      </div>
+
       <!-- COUPON / REFERRAL CODE -->
       <div class="field-group">
         <label class="field-label">Coupon / Referral Code <span style="color:var(--text-dim); font-weight:400; text-transform:none; letter-spacing:0;">(optional)</span></label>
@@ -3331,11 +3337,13 @@
     const ntid = document.getElementById('signup-ntid').value.trim();
     const password = document.getElementById('signup-password').value;
     const confirm = document.getElementById('signup-confirm').value;
+    const phone = document.getElementById('signup-phone').value.trim();
     const terms = document.getElementById('signup-terms').checked;
 
     if (!fname || !lname) return showError('signup-error', 'Please enter your full name.');
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError('signup-error', 'Please enter a valid email address.');
     if (!ntid) return showError('signup-error', 'Please enter your NinjaTrader User ID.');
+    if (!phone) return showError('signup-error', 'Please enter your phone number.');
     if (password.length < 8) return showError('signup-error', 'Password must be at least 8 characters.');
     if (password !== confirm) return showError('signup-error', 'Passwords do not match.');
     if (!terms) return showError('signup-error', 'Please accept the Terms of Service to continue.');
@@ -3369,14 +3377,14 @@
 
     // &#9472;&#9472; CHECK RISK DISCLOSURE IS SIGNED FIRST &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
     if (!hasSignedDisclosure(email)) {
-      pendingSignupData = { fname, lname, email, password, ntid, plan: currentPlan, coupon: appliedCoupon };
+      pendingSignupData = { fname, lname, email, password, ntid, phone, plan: currentPlan, coupon: appliedCoupon };
       setLoading('signup-btn-text', 'signup-spinner', false);
       showError('signup-error', '&#9888; Please read and sign the Risk Disclosure before continuing.');
       setTimeout(() => { openRiskDisclosureForSignup(); }, 400);
       return;
     }
 
-    proceedAfterDisclosure({ fname, lname, email, password, ntid });
+    proceedAfterDisclosure({ fname, lname, email, password, ntid, phone });
   }
 
   // Stores form data while user goes to sign the disclosure
@@ -3406,12 +3414,13 @@
     return !!signed[email];
   }
 
-  async function proceedAfterDisclosure({ fname, lname, email, password, ntid }) {
+  async function proceedAfterDisclosure({ fname, lname, email, password, ntid, phone }) {
     // Restore plan/coupon from pendingSignupData if coming back from disclosure
     if (pendingSignupData) {
       currentPlan = pendingSignupData.plan || currentPlan;
       appliedCoupon = pendingSignupData.coupon || appliedCoupon;
       ntid = ntid || pendingSignupData.ntid;
+      phone = phone || pendingSignupData.phone;
       selectPlan(currentPlan);
     }
     // Ensure signup modal is visible so setLoading can find elements
@@ -3426,7 +3435,7 @@
       try {
         const regData = await apiCall('/auth/register', {
           method: 'POST',
-          body: JSON.stringify({ first_name: fname, last_name: lname, email, password, ninja_trader_id: ntid })
+          body: JSON.stringify({ first_name: fname, last_name: lname, email, password, ninja_trader_id: ntid, phone })
         });
         setAccessToken(regData.accessToken);
         setUserId(regData.user.id);
@@ -5782,6 +5791,7 @@
               <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Phone</th>
                 <th>NT User ID</th>
                 <th>Plan</th>
                 <th>Status</th>
@@ -6829,6 +6839,7 @@
           return `<tr>
             <td style="color:var(--text-primary); font-weight:600;">${u.first_name} ${u.last_name}</td>
             <td>${u.email}</td>
+            <td style="font-size:12px; color:var(--text-muted);">${u.phone || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
             <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan);">${u.ninja_trader_id || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
             <td>${planPill}</td>
             <td>${statusPill}</td>
