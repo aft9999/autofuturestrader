@@ -6826,7 +6826,7 @@
           const trialEnd = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;';
           const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
           const editBtn = `<div style="display:flex; flex-direction:column; gap:4px;">
-              <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
+              <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
               <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editNtId('${u.id}','${u.ninja_trader_id || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; NT ID</button>
             </div>`;
           return `<tr>
