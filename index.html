@@ -5820,15 +5820,15 @@
           <table class="admin-table" id="admin-subscribers-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
+                <th onclick="sortAdminTable('name')" style="cursor:pointer; user-select:none;" id="th-name">Name <span id="sort-name">↕</span></th>
+                <th onclick="sortAdminTable('email')" style="cursor:pointer; user-select:none;" id="th-email">Email <span id="sort-email">↕</span></th>
                 <th>Phone</th>
                 <th>NT User ID</th>
-                <th>Plan</th>
-                <th>Status</th>
-                <th>Joined</th>
-                <th>Trial / Expires</th>
-                <th>Last Login</th>
+                <th onclick="sortAdminTable('plan')" style="cursor:pointer; user-select:none;" id="th-plan">Plan <span id="sort-plan">↕</span></th>
+                <th onclick="sortAdminTable('status')" style="cursor:pointer; user-select:none;" id="th-status">Status <span id="sort-status">↕</span></th>
+                <th onclick="sortAdminTable('joined')" style="cursor:pointer; user-select:none;" id="th-joined">Joined <span id="sort-joined">↕</span></th>
+                <th onclick="sortAdminTable('expires')" style="cursor:pointer; user-select:none;" id="th-expires">Trial / Expires <span id="sort-expires">↕</span></th>
+                <th onclick="sortAdminTable('lastlogin')" style="cursor:pointer; user-select:none;" id="th-lastlogin">Last Login <span id="sort-lastlogin">↕</span></th>
                 <th>Edit</th>
                 <th>Actions</th>
               </tr>
@@ -6803,6 +6803,95 @@
   }
 
   // &#9472;&#9472; LOAD DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+  // ── ADMIN TABLE SORTING ───────────────────────────────────────────────────
+  let _adminSortCol = null;
+  let _adminSortDir = 1; // 1 = asc, -1 = desc
+  let _adminAllRows = [];
+
+  function sortAdminTable(col) {
+    if (_adminSortCol === col) {
+      _adminSortDir *= -1;
+    } else {
+      _adminSortCol = col;
+      _adminSortDir = 1;
+    }
+    // Update sort indicators
+    ['name','email','plan','status','joined','expires','lastlogin'].forEach(c => {
+      const el = document.getElementById('sort-' + c);
+      if (el) el.textContent = c === col ? (_adminSortDir === 1 ? '↑' : '↓') : '↕';
+    });
+    // Sort rows
+    _adminAllRows.sort((a, b) => {
+      let va, vb;
+      switch(col) {
+        case 'name':     va = (a.first_name + ' ' + a.last_name).toLowerCase(); vb = (b.first_name + ' ' + b.last_name).toLowerCase(); break;
+        case 'email':    va = a.email.toLowerCase(); vb = b.email.toLowerCase(); break;
+        case 'plan':     va = a.billing_cycle || ''; vb = b.billing_cycle || ''; break;
+        case 'status':   va = a.subscription_status || ''; vb = b.subscription_status || ''; break;
+        case 'joined':   va = new Date(a.created_at||0).getTime(); vb = new Date(b.created_at||0).getTime(); break;
+        case 'expires':  va = new Date(a.subscription_status === 'trialing' ? (a.trial_ends_at||0) : (a.current_period_end||0)).getTime(); vb = new Date(b.subscription_status === 'trialing' ? (b.trial_ends_at||0) : (b.current_period_end||0)).getTime(); break;
+        case 'lastlogin':va = new Date(a.last_login||0).getTime(); vb = new Date(b.last_login||0).getTime(); break;
+        default: return 0;
+      }
+      if (va < vb) return -_adminSortDir;
+      if (va > vb) return _adminSortDir;
+      return 0;
+    });
+    renderAdminRows(_adminAllRows);
+  }
+
+  function renderAdminRows(subs) {
+    const tbody = document.getElementById('admin-subscribers-body');
+    if (!subs.length) {
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:var(--text-dim); padding:24px;">No subscribers yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = subs.map(u => {
+      const planPill = u.subscription_status === 'trialing'
+        ? `<span class="admin-pill admin-pill-amber">Trial</span>`
+        : u.billing_cycle === 'quarterly'
+          ? `<span class="admin-pill admin-pill-green">Quarterly</span>`
+          : u.billing_cycle === 'monthly'
+            ? `<span class="admin-pill admin-pill-cyan">Monthly</span>`
+            : `<span class="admin-pill" style="background:rgba(255,255,255,0.05);">&#8212;</span>`;
+      const statusColor = u.subscription_status === 'active' ? 'admin-pill-green'
+        : u.subscription_status === 'trialing' ? 'admin-pill-amber'
+        : u.subscription_status === 'cancelled' ? 'admin-pill-red'
+        : 'admin-pill-red';
+      const statusPill = u.is_lifetime
+        ? `<div style="display:flex;flex-direction:column;gap:3px;"><span class="admin-pill admin-pill-green">ACTIVE</span><span class="admin-pill" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-size:10px;">&#9854; LIFETIME</span></div>`
+        : `<span class="admin-pill ${statusColor}">${(u.subscription_status || 'No sub').toUpperCase()}</span>`;
+      const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '&#8212;';
+      const trialEnd = u.subscription_status === 'trialing'
+        ? (u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;')
+        : (u.current_period_end ? new Date(u.current_period_end).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;');
+      const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
+      const editBtn = `<div style="display:flex; flex-direction:column; gap:4px;">
+          <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
+          <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editNtId('${u.id}','${u.ninja_trader_id || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; NT ID</button>
+        </div>`;
+      return `<tr>
+        <td style="color:var(--text-primary); font-weight:600;">${u.first_name} ${u.last_name}</td>
+        <td>${u.email}</td>
+        <td style="font-size:12px; color:var(--text-muted);">${u.phone || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
+        <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan);">${u.ninja_trader_id || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
+        <td>${planPill}</td>
+        <td>${statusPill}</td>
+        <td>${joined}</td>
+        <td style="color:#f59e0b;">${trialEnd}</td>
+        <td style="color:var(--text-dim); font-size:12px;">${lastLogin}</td>
+        <td>${editBtn}</td>
+        <td>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <button class="admin-del-btn" onclick="confirmDeleteSubscriber('${u.id}','${u.email}')">Delete</button>
+            <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:#a78bfa;" onclick="downloadDisclosurePDF('${u.id}','${u.first_name} ${u.last_name}')">Disclosure</button>
+            <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:${u.is_lifetime ? 'rgba(245,158,11,0.2)' : 'rgba(57,230,0,0.1)'};border-color:${u.is_lifetime ? 'rgba(245,158,11,0.4)' : 'rgba(57,230,0,0.3)'};color:${u.is_lifetime ? '#f59e0b' : '#39e600'};" onclick="toggleLifetime('${u.id}','${u.first_name} ${u.last_name}',${u.is_lifetime ? 'true' : 'false'})">${u.is_lifetime ? '♾ Lifetime ON' : '♾ Set Lifetime'}</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
   async function loadAdminData() {
     const tbody = document.getElementById('admin-subscribers-body');
     const sigbody = document.getElementById('admin-signatures-body');
@@ -6842,54 +6931,9 @@
 
       // Subscribers table
       const subs = subsData.subscribers || [];
-      if (!subs.length) {
-        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; color:var(--text-dim); padding:24px;">No subscribers yet.</td></tr>';
-      } else {
-        tbody.innerHTML = subs.map(u => {
-          const planPill = u.subscription_status === 'trialing'
-            ? `<span class="admin-pill admin-pill-amber">Trial</span>`
-            : u.billing_cycle === 'quarterly'
-              ? `<span class="admin-pill admin-pill-green">Quarterly</span>`
-              : u.billing_cycle === 'monthly'
-                ? `<span class="admin-pill admin-pill-cyan">Monthly</span>`
-                : `<span class="admin-pill" style="background:rgba(255,255,255,0.05);">&#8212;</span>`;
-          const statusColor = u.subscription_status === 'active' ? 'admin-pill-green'
-            : u.subscription_status === 'trialing' ? 'admin-pill-amber'
-            : u.subscription_status === 'cancelled' ? 'admin-pill-red'
-            : 'admin-pill-red';
-          const statusPill = u.is_lifetime
-            ? `<div style="display:flex;flex-direction:column;gap:3px;"><span class="admin-pill admin-pill-green">ACTIVE</span><span class="admin-pill" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-size:10px;">&#9854; LIFETIME</span></div>`
-            : `<span class="admin-pill ${statusColor}">${(u.subscription_status || 'No sub').toUpperCase()}</span>`;
-          const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '&#8212;';
-          const trialEnd = u.subscription_status === 'trialing'
-            ? (u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;')
-            : (u.current_period_end ? new Date(u.current_period_end).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;');
-          const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
-          const editBtn = `<div style="display:flex; flex-direction:column; gap:4px;">
-              <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
-              <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editNtId('${u.id}','${u.ninja_trader_id || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; NT ID</button>
-            </div>`;
-          return `<tr>
-            <td style="color:var(--text-primary); font-weight:600;">${u.first_name} ${u.last_name}</td>
-            <td>${u.email}</td>
-            <td style="font-size:12px; color:var(--text-muted);">${u.phone || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
-            <td style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--cyan);">${u.ninja_trader_id || '<span style="color:var(--text-dim);">&#8212;</span>'}</td>
-            <td>${planPill}</td>
-            <td>${statusPill}</td>
-            <td>${joined}</td>
-            <td style="color:#f59e0b;">${trialEnd}</td>
-            <td style="color:var(--text-dim); font-size:12px;">${lastLogin}</td>
-            <td>${editBtn}</td>
-            <td>
-              <div style="display:flex; flex-direction:column; gap:4px;">
-                <button class="admin-del-btn" onclick="confirmDeleteSubscriber('${u.id}','${u.email}')">Delete</button>
-                <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(167,139,250,0.1);border-color:rgba(167,139,250,0.3);color:#a78bfa;" onclick="downloadDisclosurePDF('${u.id}','${u.first_name} ${u.last_name}')">Disclosure</button>
-                <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:${u.is_lifetime ? 'rgba(245,158,11,0.2)' : 'rgba(57,230,0,0.1)'};border-color:${u.is_lifetime ? 'rgba(245,158,11,0.4)' : 'rgba(57,230,0,0.3)'};color:${u.is_lifetime ? '#f59e0b' : '#39e600'};" onclick="toggleLifetime('${u.id}','${u.first_name} ${u.last_name}',${u.is_lifetime ? 'true' : 'false'})">${u.is_lifetime ? '♾ Lifetime ON' : '♾ Set Lifetime'}</button>
-              </div>
-            </td>
-          </tr>`;
-        }).join('');
-      }
+      _adminAllRows = subs;
+      renderAdminRows(subs);
+
 
       // Signatures table
       const sigs = sigsData.signatures || [];
