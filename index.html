@@ -5827,7 +5827,7 @@
                 <th>Plan</th>
                 <th>Status</th>
                 <th>Joined</th>
-                <th>Trial Ends</th>
+                <th>Trial / Expires</th>
                 <th>Last Login</th>
                 <th>Edit</th>
                 <th>Actions</th>
@@ -6861,7 +6861,9 @@
             ? `<div style="display:flex;flex-direction:column;gap:3px;"><span class="admin-pill admin-pill-green">ACTIVE</span><span class="admin-pill" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);font-size:10px;">&#9854; LIFETIME</span></div>`
             : `<span class="admin-pill ${statusColor}">${(u.subscription_status || 'No sub').toUpperCase()}</span>`;
           const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : '&#8212;';
-          const trialEnd = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;';
+          const trialEnd = u.subscription_status === 'trialing'
+            ? (u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;')
+            : (u.current_period_end ? new Date(u.current_period_end).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric', timeZone:'UTC' }) : '&#8212;');
           const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
           const editBtn = `<div style="display:flex; flex-direction:column; gap:4px;">
               <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
