@@ -1810,6 +1810,7 @@
       <button class="dnav-tab" data-tab="templates" onclick="switchDashTab('templates')">Templates</button>
       <button class="dnav-tab" data-tab="releases" onclick="switchDashTab('releases')">Releases</button>
       <button class="dnav-tab" data-tab="documents" onclick="switchDashTab('documents')">Documents &amp; Videos</button>
+      <button class="dnav-tab" data-tab="referrals" onclick="switchDashTab('referrals')">🎁 Referrals</button>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
 
@@ -2241,7 +2242,82 @@
         <div id="documents-list" style="display:none; flex-direction:column; gap:12px;"></div>
       </div>
 
-      <!-- Viewer modal -->
+      <!-- REFERRALS TAB -->
+      <div id="dtab-referrals" class="dash-tab-panel" style="display:none;">
+        <div style="max-width:700px; margin:0 auto;">
+
+          <!-- Header -->
+          <div style="margin-bottom:24px;">
+            <h2 style="font-size:22px; font-weight:800; color:var(--text-primary); margin:0 0 6px;">Refer &amp; Earn</h2>
+            <p style="color:var(--text-muted); font-size:14px; margin:0;">Share your referral code and earn $25/month for each active referral. Get 10 active referrals and your subscription is <strong style="color:#39e600;">FREE</strong>!</p>
+          </div>
+
+          <!-- Stats Row -->
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px;">
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; text-align:center;">
+              <div style="font-size:28px; font-weight:900; color:var(--cyan);" id="ref-stat-active">—</div>
+              <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">Active Referrals</div>
+            </div>
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; text-align:center;">
+              <div style="font-size:28px; font-weight:900; color:#39e600;" id="ref-stat-credit">—</div>
+              <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">Total Credits Earned</div>
+            </div>
+            <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:18px; text-align:center;">
+              <div style="font-size:28px; font-weight:900; color:#f59e0b;" id="ref-stat-needed">—</div>
+              <div style="font-size:12px; color:var(--text-dim); margin-top:4px;">Needed for Free Sub</div>
+            </div>
+          </div>
+
+          <!-- Free subscription banner -->
+          <div id="ref-free-banner" style="display:none; background:linear-gradient(135deg,rgba(57,230,0,0.15),rgba(0,200,248,0.1)); border:1px solid rgba(57,230,0,0.4); border-radius:12px; padding:16px 20px; margin-bottom:24px; text-align:center;">
+            <div style="font-size:20px; margin-bottom:4px;">🎉</div>
+            <div style="font-size:15px; font-weight:800; color:#39e600;">Your subscription is FREE!</div>
+            <div style="font-size:13px; color:var(--text-muted); margin-top:4px;">You have 10+ active referrals. Your subscription renews at no cost.</div>
+          </div>
+
+          <!-- Referral Code Box -->
+          <div style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:12px; padding:20px; margin-bottom:24px;">
+            <div style="font-size:13px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:10px;">Your Referral Code</div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div id="ref-code-display" style="flex:1; background:rgba(0,200,248,0.06); border:1px solid rgba(0,200,248,0.2); border-radius:8px; padding:12px 16px; font-family:'JetBrains Mono',monospace; font-size:14px; color:var(--cyan); word-break:break-all;">Loading...</div>
+              <button onclick="copyReferralCode()" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:12px 18px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap;">📋 Copy</button>
+            </div>
+            <div style="font-size:12px; color:var(--text-dim); margin-top:8px;">Share this code with friends. They get <strong style="color:#39e600;">$100 off</strong> month 1 and <strong style="color:#39e600;">$25 off</strong> month 2.</div>
+          </div>
+
+          <!-- How it works -->
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:24px;">
+            <div style="font-size:13px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px;">How It Works</div>
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(0,200,248,0.15); border:1px solid rgba(0,200,248,0.3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--cyan); flex-shrink:0;">1</div>
+                <div style="font-size:13px; color:var(--text-muted); padding-top:4px;">Share your referral code (your email) with friends</div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(0,200,248,0.15); border:1px solid rgba(0,200,248,0.3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:var(--cyan); flex-shrink:0;">2</div>
+                <div style="font-size:13px; color:var(--text-muted); padding-top:4px;">They enter your email in the referral code field at checkout</div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(57,230,0,0.15); border:1px solid rgba(57,230,0,0.3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#39e600; flex-shrink:0;">3</div>
+                <div style="font-size:13px; color:var(--text-muted); padding-top:4px;">They get <strong style="color:#39e600;">$100 off month 1</strong> and <strong style="color:#39e600;">$25 off month 2</strong></div>
+              </div>
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(57,230,0,0.15); border:1px solid rgba(57,230,0,0.3); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#39e600; flex-shrink:0;">4</div>
+                <div style="font-size:13px; color:var(--text-muted); padding-top:4px;">You earn <strong style="color:#39e600;">$25/month</strong> for every month they stay active. 10 active referrals = <strong style="color:#39e600;">FREE subscription</strong>!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Referred Users List -->
+          <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px;">
+            <div style="font-size:13px; color:var(--text-dim); font-weight:600; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px;">Your Referrals</div>
+            <div id="ref-list">
+              <div style="text-align:center; padding:24px; color:var(--text-dim); font-size:13px;">Loading...</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
       <div id="doc-viewer-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:9999; align-items:center; justify-content:center; padding:20px;">
         <div style="background:var(--bg-card); border-radius:16px; width:100%; max-width:900px; max-height:90vh; display:flex; flex-direction:column; overflow:hidden;">
           <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); flex-shrink:0;">
@@ -3275,10 +3351,54 @@
   const PLAN_PRICES = { monthly: 299, quarterly: 749, trial: 0 };
   let appliedCoupon = null;
 
+  let appliedReferral = null;
+
   async function applyCoupon() {
-    const code = document.getElementById('signup-coupon').value.trim().toUpperCase();
+    const rawCode = document.getElementById('signup-coupon').value.trim();
+    const code = rawCode.toUpperCase();
     const resultEl = document.getElementById('coupon-result');
-    if (!code) return;
+    if (!rawCode) return;
+
+    // Prevent combining coupon + referral
+    if (appliedCoupon && !appliedCoupon.isReferral) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;A coupon code is already applied. Remove it before adding a referral code.</div>`;
+      return;
+    }
+    if (appliedCoupon && appliedCoupon.isReferral) {
+      resultEl.style.display = 'block';
+      resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;A referral code is already applied. Remove it before adding a coupon code.</div>`;
+      return;
+    }
+
+    // Detect if it's an email (referral code)
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawCode);
+
+    if (isEmail) {
+      // Handle as referral code
+      try {
+        const res = await fetch(`${API_BASE}/referrals/validate/${encodeURIComponent(rawCode.toLowerCase())}`);
+        const data = await res.json();
+        if (!res.ok) {
+          appliedReferral = null;
+          resultEl.style.display = 'block';
+          resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;${data.error || 'Invalid referral code.'}</div>`;
+          return;
+        }
+        appliedReferral = { email: rawCode.toLowerCase(), referrer_name: data.referrer_name };
+        // Apply $100 off first month as coupon
+        appliedCoupon = { code: 'REFERRAL', type: 'fixed', value: 100, id: null, label: '$100 off (referral)', isReferral: true, referralEmail: rawCode.toLowerCase() };
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `<div class="coupon-success">&#10003; &nbsp;Referral code valid! $100 off your first month, $25 off your second month.</div>`;
+        document.querySelector('.coupon-apply-btn').disabled = true;
+        document.getElementById('signup-coupon').disabled = true;
+        updatePriceSummary();
+      } catch (err) {
+        resultEl.style.display = 'block';
+        resultEl.innerHTML = `<div class="coupon-error">&#10005; &nbsp;Could not validate referral code. Please try again.</div>`;
+      }
+      return;
+    }
 
     try {
       const res = await fetch(`${API_BASE}/coupons/validate`, {
@@ -3315,6 +3435,7 @@
 
   function resetCoupon() {
     appliedCoupon = null;
+    appliedReferral = null;
     document.getElementById('coupon-result').style.display = 'none';
     const btn = document.querySelector('.coupon-apply-btn');
     if (btn) btn.disabled = false;
@@ -3829,6 +3950,16 @@
             <div style="color:var(--green); font-weight:800; font-size:16px;">Payment Successful!</div>
             <div style="color:var(--text-muted); font-size:13px;">Setting up your account&hellip;</div>`;
         }
+        // Apply referral if one was used
+        if (appliedCoupon?.isReferral && appliedCoupon?.referralEmail) {
+          try {
+            await apiCall('/referrals/apply', {
+              method: 'POST',
+              body: JSON.stringify({ referral_code: appliedCoupon.referralEmail })
+            });
+          } catch(e) { console.warn('Referral apply failed:', e.message); }
+        }
+        appliedReferral = null;
         pendingSignup = null;
         updateNavForUser(getCurrentUser());
         setTimeout(() => { closeModal(); showDashboard(getCurrentUser()); }, 1200);
@@ -4308,6 +4439,7 @@
     if (tab === 'templates') loadTemplates();
     if (tab === 'releases') loadReleases();
     if (tab === 'documents') loadDocuments();
+    if (tab === 'referrals') loadReferrals();
   }
 
   // &#9472;&#9472; SIMULATED DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
@@ -6523,6 +6655,49 @@
 
   function canView(ext) {
     return [...VIDEO_EXTS, ...IMAGE_EXTS, ...PDF_EXTS].includes(ext);
+  }
+
+  async function loadReferrals() {
+    try {
+      const data = await apiCall('/referrals/my');
+      // Update stats
+      document.getElementById('ref-stat-active').textContent = data.active_referrals;
+      document.getElementById('ref-stat-credit').textContent = `$${((data.total_credit_cents||0)/100).toFixed(0)}`;
+      const needed = Math.max(0, 10 - data.active_referrals);
+      document.getElementById('ref-stat-needed').textContent = needed === 0 ? '🎉' : needed;
+      document.getElementById('ref-code-display').textContent = data.referral_code || '—';
+      if (data.subscription_free) document.getElementById('ref-free-banner').style.display = 'block';
+
+      // Render referred list
+      const listEl = document.getElementById('ref-list');
+      if (!data.referred || !data.referred.length) {
+        listEl.innerHTML = '<div style="text-align:center; padding:24px; color:var(--text-dim); font-size:13px;">No referrals yet. Share your code to get started!</div>';
+        return;
+      }
+      listEl.innerHTML = data.referred.map(r => {
+        const name = r.first_name ? `${r.first_name} ${r.last_name}` : r.referred_email;
+        const date = new Date(r.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        const statusColor = r.status === 'active' ? '#39e600' : '#f59e0b';
+        const statusLabel = r.status === 'active' ? 'Active' : 'Pending';
+        return `<div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); gap:12px; flex-wrap:wrap;">
+          <div>
+            <div style="font-size:13px; font-weight:700; color:var(--text-primary);">${name}</div>
+            <div style="font-size:11px; color:var(--text-dim);">Referred ${date} &middot; ${r.months_credited} months credited</div>
+          </div>
+          <span style="background:rgba(${r.status==='active'?'57,230,0':'245,158,11'},0.15); color:${statusColor}; border:1px solid ${statusColor}40; border-radius:20px; padding:3px 10px; font-size:11px; font-weight:700;">${statusLabel}</span>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      document.getElementById('ref-list').innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:24px;">Failed to load referrals: ${err.message}</div>`;
+    }
+  }
+
+  function copyReferralCode() {
+    const code = document.getElementById('ref-code-display').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = document.querySelector('[onclick="copyReferralCode()"]');
+      if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => btn.textContent = '📋 Copy', 2000); }
+    });
   }
 
   async function loadDocuments() {
