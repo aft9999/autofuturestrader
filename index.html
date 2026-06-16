@@ -5946,6 +5946,7 @@
         <button class="admin-tab" id="atab-releases" onclick="switchAdminTab('releases')">&#x1F4E6; Releases</button>
         <button class="admin-tab" id="atab-documents" onclick="switchAdminTab('documents')">&#x1F4DA; Docs &amp; Videos</button>
         <button class="admin-tab" id="atab-discounts" onclick="switchAdminTab('discounts')">&#x1F3F7; Discounts</button>
+        <button class="admin-tab" id="atab-referrals" onclick="switchAdminTab('referrals')">&#x1F381; Referrals</button>
       </div>
 
       <!-- Subscribers Table -->
@@ -6195,6 +6196,24 @@
       </div>
     </div><!-- /admin-panel-discounts -->
 
+    <!-- ADMIN REFERRALS PANEL -->
+    <div id="admin-panel-referrals" style="display:none;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <div style="font-size:13px; color:var(--text-dim);">All referrals — who referred whom, status, and credits earned.</div>
+        <button onclick="adminLoadReferrals()" style="background:rgba(0,200,248,0.1); border:1px solid rgba(0,200,248,0.3); color:var(--cyan); border-radius:8px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer;">&#x21BA; Refresh</button>
+      </div>
+      <!-- Summary stats -->
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px;" id="admin-referral-stats">
+        <div class="admin-stat-card"><div class="admin-stat-label">Total Referrals</div><div class="admin-stat-val" id="aref-total">—</div></div>
+        <div class="admin-stat-card"><div class="admin-stat-label">Active</div><div class="admin-stat-val" style="color:var(--green);" id="aref-active">—</div></div>
+        <div class="admin-stat-card"><div class="admin-stat-label">Pending</div><div class="admin-stat-val" style="color:#f59e0b;" id="aref-pending">—</div></div>
+        <div class="admin-stat-card"><div class="admin-stat-label">Total Credits</div><div class="admin-stat-val" style="color:var(--cyan);" id="aref-credits">—</div></div>
+      </div>
+      <div id="admin-referrals-list" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>
+      </div>
+    </div><!-- /admin-panel-referrals -->
+
   </div><!-- /admin-container -->
 </div>
 
@@ -6384,7 +6403,7 @@
   // &#9472;&#9472; TABS &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
   function switchAdminTab(tab) {
     adminCurrentTab = tab;
-    ['subscribers','signatures','templates','discounts','releases','documents'].forEach(t => {
+    ['subscribers','signatures','templates','discounts','releases','documents','referrals'].forEach(t => {
       document.getElementById('atab-' + t).classList.toggle('active', t === tab);
       document.getElementById('admin-panel-' + t).style.display = t === tab ? 'block' : 'none';
     });
@@ -6392,6 +6411,7 @@
     if (tab === 'discounts') adminLoadCoupons();
     if (tab === 'releases') adminLoadReleases();
     if (tab === 'documents') adminLoadDocuments();
+    if (tab === 'referrals') adminLoadReferrals();
   }
 
   // ── ADMIN COUPONS ──────────────────────────────────────────────────────────
@@ -6980,7 +7000,50 @@
   }
 
   // &#9472;&#9472; LOAD DATA &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
-  // ── ADMIN TABLE SORTING ───────────────────────────────────────────────────
+  async function adminLoadReferrals() {
+    const listEl = document.getElementById('admin-referrals-list');
+    listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">Loading&hellip;</div>';
+    try {
+      const res = await fetch(`${API_BASE}/admin/referrals`, { headers: { 'x-admin-password': ADMIN_PASSWORD } });
+      const data = await res.json();
+      const referrals = data.referrals || [];
+      const active = referrals.filter(r => r.status === 'active').length;
+      const pending = referrals.filter(r => r.status === 'pending').length;
+      const totalCredits = referrals.reduce((sum, r) => sum + (r.credit_cents || 0), 0);
+      document.getElementById('aref-total').textContent = referrals.length;
+      document.getElementById('aref-active').textContent = active;
+      document.getElementById('aref-pending').textContent = pending;
+      document.getElementById('aref-credits').textContent = '$' + (totalCredits/100).toFixed(0);
+      if (!referrals.length) {
+        listEl.innerHTML = '<div style="color:var(--text-dim); font-size:13px; text-align:center; padding:32px;">No referrals yet.</div>';
+        return;
+      }
+      listEl.innerHTML = '';
+      referrals.forEach(r => {
+        const date = new Date(r.created_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+        const activated = r.activated_at ? new Date(r.activated_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+        const statusColor = r.status === 'active' ? '#39e600' : '#f59e0b';
+        const row = document.createElement('div');
+        row.style.cssText = 'background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;';
+        row.innerHTML = `<div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:700; color:var(--text-primary);">
+              <span style="color:var(--cyan);">${r.referrer_first} (${r.referrer_email})</span>
+              <span style="color:var(--text-dim); font-weight:400;"> referred </span>
+              <span style="color:#a78bfa;">${r.referred_first || ''} (${r.referred_email || '—'})</span>
+            </div>
+            <div style="font-size:11px; color:var(--text-dim); margin-top:4px;">
+              Referred: ${date} &nbsp;|&nbsp; Activated: ${activated} &nbsp;|&nbsp; Months credited: ${r.months_credited || 0} &nbsp;|&nbsp; Credits: <span style="color:#39e600;">$${((r.credit_cents||0)/100).toFixed(0)}</span>
+            </div>
+          </div>
+          <span style="background:rgba(${r.status==='active'?'57,230,0':'245,158,11'},0.15); color:${statusColor}; border:1px solid ${statusColor}40; border-radius:20px; padding:3px 12px; font-size:11px; font-weight:700; white-space:nowrap;">${r.status.toUpperCase()}</span>`;
+        listEl.appendChild(row);
+      });
+    } catch(err) {
+      listEl.innerHTML = `<div style="color:#ff4a4a; font-size:13px; text-align:center; padding:32px;">Error: ${err.message}</div>`;
+    }
+  }
+
+    // ── ADMIN TABLE SORTING ───────────────────────────────────────────────────
   let _adminSortCol = null;
   let _adminSortDir = 1; // 1 = asc, -1 = desc
   let _adminAllRows = [];
