@@ -4430,7 +4430,7 @@
 
   function switchDashTab(tab) {
     dashCurrentTab = tab;
-    ['overview','history','account','templates','releases','documents'].forEach(t => {
+    ['overview','history','account','templates','releases','documents','referrals'].forEach(t => {
       document.getElementById('dtab-' + t).style.display = t === tab ? 'block' : 'none';
       const btn = document.querySelector(`.dnav-tab[data-tab="${t}"]`);
       if (btn) btn.classList.toggle('active', t === tab);
