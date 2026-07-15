@@ -7127,6 +7127,7 @@
       const lastLogin = u.last_login ? new Date(u.last_login).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' }) : 'Never';
       const editBtn = `<div style="display:flex; flex-direction:column; gap:4px;">
           <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editTrialDate('${u.id}','${u.trial_ends_at || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; Trial Date</button>
+          <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;background:rgba(0,200,248,0.1);border-color:rgba(0,200,248,0.3);color:var(--cyan);" onclick="extendSubscription('${u.id}','${u.current_period_end || ''}','${u.first_name} ${u.last_name}')">&#128197; Extend Sub</button>
           <button class="admin-action-btn" style="padding:4px 10px;font-size:11px;white-space:nowrap;" onclick="editNtId('${u.id}','${u.ninja_trader_id || ''}','${u.first_name} ${u.last_name}')">&#9999;&#65039; NT ID</button>
         </div>`;
       return `<tr>
@@ -7257,6 +7258,48 @@
   }
 
   // &#9472;&#9472; EDIT TRIAL DATE &#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;&#9472;
+  function extendSubscription(userId, currentEnd, userName) {
+    const current = currentEnd ? new Date(currentEnd).toISOString().slice(0, 10) : '';
+    const confirmBox = document.getElementById('admin-confirm');
+    const titleEl = document.getElementById('admin-confirm-msg');
+    const subEl = document.getElementById('admin-confirm-sub');
+    const okBtn = document.getElementById('admin-confirm-ok');
+
+    titleEl.textContent = `Extend Subscription for ${userName}`;
+    subEl.innerHTML = `
+      <div style="margin-top:12px;">
+        <label style="font-size:12px; color:var(--text-dim); display:block; margin-bottom:6px;">New subscription end date:</label>
+        <input type="date" id="extend-sub-input" value="${current}"
+          style="background:var(--bg-card); border:1px solid var(--border-bright); border-radius:8px; padding:8px 12px; color:var(--text-primary); font-size:14px; width:100%;" />
+      </div>`;
+
+    okBtn.textContent = 'Save';
+    okBtn.style.background = 'rgba(0,200,248,0.15)';
+    okBtn.style.borderColor = 'rgba(0,200,248,0.4)';
+    okBtn.style.color = 'var(--cyan)';
+
+    okBtn.onclick = async () => {
+      const newDate = document.getElementById('extend-sub-input').value;
+      if (!newDate) return;
+      confirmBox.style.display = 'none';
+      const isoDate = newDate + 'T12:00:00.000Z';
+      try {
+        const res = await fetch(`${API_BASE}/admin/subscribers/${userId}/extend`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'X-Admin-Password': ADMIN_PASSWORD },
+          body: JSON.stringify({ current_period_end: isoDate })
+        });
+        if (!res.ok) throw new Error('Update failed');
+        showAdminToast(`Subscription extended to ${new Date(isoDate).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}`);
+        loadAdminData();
+      } catch (err) {
+        showAdminToast('Failed to extend subscription');
+      }
+    };
+
+    confirmBox.style.display = 'flex';
+  }
+
   function editTrialDate(userId, currentDate, userName) {
     const current = currentDate ? new Date(currentDate).toISOString().slice(0, 10) : '';
     const confirmBox = document.getElementById('admin-confirm');
